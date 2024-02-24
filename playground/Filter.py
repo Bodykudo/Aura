@@ -2,16 +2,15 @@ import numpy as np
 
 
 class Filter:
-    def __init__(self, ftype):
-
-        self.filter_type = ftype
-
-    def avg_filter(self, image):
+    @staticmethod
+    def avg_filter(image):
         pass
 
-    def gaussian_filter(self, image):
+    @staticmethod
+    def gaussian_filter(image):
         pass
 
-    def median_filter(self, image):
+    @staticmethod
+    def median_filter(image):
         pass
 
