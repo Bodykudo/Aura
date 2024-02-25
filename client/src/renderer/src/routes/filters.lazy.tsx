@@ -12,11 +12,12 @@ import {
 } from '@renderer/components/ui/select';
 import useGlobalState from '@renderer/hooks/useGlobalState';
 import { createLazyFileRoute } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 function Filters() {
   const ipcRenderer = (window as any).ipcRenderer;
-  const { setProcessedImageURL } = useGlobalState();
+  const { processedImagesURLs, setProcessedImageURL } = useGlobalState();
+  const downloadRef = useRef<HTMLAnchorElement | null>(null);
 
   useEffect(() => {
     // ipcRenderer.on('upload:done', (event: any) => {
@@ -27,16 +28,20 @@ function Filters() {
     // });
     ipcRenderer.on('image:received', (event: any) => {
       console.log(event);
-      setProcessedImageURL(event);
-      if (event?.data) {
-        console.log(event.data);
-      }
+      console.log(event);
+      setProcessedImageURL(0, event);
     });
   }, []);
 
   const handleClick = () => {
     console.log('clicked');
     ipcRenderer.send('get:image');
+  };
+
+  const handleDownloadClick = () => {
+    if (processedImagesURLs && downloadRef.current) {
+      downloadRef.current.click();
+    }
   };
 
   return (
@@ -58,11 +63,18 @@ function Filters() {
           </Select>
 
           <Button onClick={handleClick}>Filter</Button>
+          {/* <Button onClick={handleDownloadClick}>Download</Button> */}
+          {/* <a
+            href={processedImageURL ?? ''}
+            download
+            style={{ display: 'none' }}
+            ref={downloadRef}
+          /> */}
         </div>
       </div>
       <div className="flex flex-col md:flex-row gap-4 w-full">
-        <Dropzone />
-        <OutputImage />
+        <Dropzone index={0} />
+        <OutputImage index={0} />
       </div>
     </div>
   );

@@ -4,7 +4,11 @@ import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 
-export default function Dropzone() {
+interface DropzoneProps {
+  index: number;
+}
+
+export default function Dropzone({ index }: DropzoneProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isUploaded, setIsUploaded] = useState(false);
   const [isHover, setIsHover] = useState(false);
@@ -14,7 +18,7 @@ export default function Dropzone() {
 
   const dropArea = useRef<HTMLLabelElement>(null);
 
-  const { uploadedImageURL, setUploadedImageURL, setFileId, setProcessedImageURL } =
+  const { uploadedImagesURLs, setUploadedImageURL, setFileId, setProcessedImageURL } =
     useGlobalState();
 
   const ipcRenderer = (window as any).ipcRenderer;
@@ -38,7 +42,7 @@ export default function Dropzone() {
   useEffect(() => {
     ipcRenderer.on('upload:done', (event: any) => {
       setIsUploading(false);
-      setFileId('TEST');
+      setFileId(index, 'TEST');
       if (progressInterval) {
         clearInterval(progressInterval);
       }
@@ -105,7 +109,7 @@ export default function Dropzone() {
       const file = files[0];
       setCurrentFilePath(file.path);
       const url = URL.createObjectURL(file);
-      setUploadedImageURL(url);
+      setUploadedImageURL(index, url);
     }
   };
 
@@ -132,10 +136,10 @@ export default function Dropzone() {
           onChange={handleChangeImage}
           className="absolute z-30 cursor-pointer opacity-0 w-full h-full"
         />
-        {uploadedImageURL && (
-          <img src={uploadedImageURL} className="h-full p-2" alt="uploaded image" />
+        {uploadedImagesURLs[index] && (
+          <img src={uploadedImagesURLs[index] ?? ''} className="h-full p-2" alt="uploaded image" />
         )}
-        {!uploadedImageURL && (
+        {!uploadedImagesURLs[index] && (
           <div className="space-y-4 text-gray-500 ">
             {isHover ? (
               <div className="flex flex-col gap-6">
@@ -165,7 +169,7 @@ export default function Dropzone() {
       {!isUploaded && (
         <div className="flex flex-col justify-between gap-4 md:flex-row items-center">
           <Button
-            disabled={!uploadedImageURL || isUploading}
+            disabled={!uploadedImagesURLs[index] || isUploading}
             onClick={handleUpload}
             className="w-[200px]"
           >
@@ -187,10 +191,10 @@ export default function Dropzone() {
           className="w-[200px]"
           onClick={() => {
             setIsUploaded(false);
-            setUploadedImageURL(null);
+            setUploadedImageURL(index, null);
             setCurrentFilePath(null);
-            setFileId(null);
-            setProcessedImageURL(null);
+            setFileId(index, null);
+            setProcessedImageURL(index, null);
           }}
         >
           Reset
