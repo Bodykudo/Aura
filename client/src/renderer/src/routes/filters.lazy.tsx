@@ -1,6 +1,14 @@
+import { useEffect } from 'react';
+import { createLazyFileRoute } from '@tanstack/react-router';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
 import Dropzone from '@renderer/components/Dropzone';
 import OutputImage from '@renderer/components/OutputImage';
-import { Button } from '@renderer/components/ui/button';
+import { Form, FormControl, FormField, FormItem } from '@renderer/components/ui/form';
+import { Input } from '@renderer/components/ui/input';
+import { Label } from '@renderer/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -10,14 +18,52 @@ import {
   SelectTrigger,
   SelectValue
 } from '@renderer/components/ui/select';
+import { Button } from '@renderer/components/ui/button';
+
 import useGlobalState from '@renderer/hooks/useGlobalState';
-import { createLazyFileRoute } from '@tanstack/react-router';
-import { useEffect, useRef } from 'react';
+
+const filtersSchema = z.object({
+  type: z.enum(['average', 'gaussian', 'median']).nullable(),
+  kernelSize: z.number(),
+  sigma: z.number()
+});
+
+const typesOptions = [
+  { label: 'Average Filter', value: 'average' },
+  { label: 'Gaussian Filter', value: 'gaussian' },
+  { label: 'Median Filter', value: 'median' }
+];
+
+const inputs = [
+  {
+    value: 'average',
+    inputs: [{ label: 'Kernel Size', name: 'kernelSize', min: 1, max: 9, step: 2 }]
+  },
+  {
+    value: 'gaussian',
+    inputs: [
+      { label: 'Kernel Size', name: 'kernelSize', min: 1, max: 9, step: 2 },
+      { label: 'Sigma', name: 'sigma', min: 0, max: 10, step: 0.1 }
+    ]
+  },
+  {
+    value: 'median',
+    inputs: [{ label: 'Kernel Size', name: 'kernelSize', min: 1, max: 9, step: 2 }]
+  }
+];
 
 function Filters() {
   const ipcRenderer = (window as any).ipcRenderer;
-  const { processedImagesURLs, setProcessedImageURL } = useGlobalState();
-  const downloadRef = useRef<HTMLAnchorElement | null>(null);
+  const { setProcessedImageURL } = useGlobalState();
+  // const downloadRef = useRef<HTMLAnchorElement | null>(null);
+
+  const form = useForm<z.infer<typeof filtersSchema>>({
+    resolver: zodResolver(filtersSchema),
+    defaultValues: {
+      kernelSize: 3,
+      sigma: 1
+    }
+  });
 
   useEffect(() => {
     // ipcRenderer.on('upload:done', (event: any) => {
@@ -33,44 +79,95 @@ function Filters() {
     });
   }, []);
 
-  const handleClick = () => {
-    console.log('clicked');
-    ipcRenderer.send('get:image');
-  };
+  // const handleClick = () => {
+  //   console.log('clicked');
+  //   ipcRenderer.send('get:image');
+  // };
 
-  const handleDownloadClick = () => {
-    if (processedImagesURLs && downloadRef.current) {
-      downloadRef.current.click();
-    }
+  // const handleDownloadClick = () => {
+  // if (processedImagesURLs && downloadRef.current) {
+  //     downloadRef.current.click();
+  //   }
+  // };
+
+  const onSubmit = (data: z.infer<typeof filtersSchema>) => {
+    console.log(data);
+    // ipcRenderer.send('process:image', data);
   };
 
   return (
     <div className="px-4 py-6">
       <div className="mb-4">
-        <div className="flex justify-between">
-          <Select>
-            <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Select filter type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Filters</SelectLabel>
-                <SelectItem value="average">Average Filter</SelectItem>
-                <SelectItem value="gaussian">Gaussian Filter</SelectItem>
-                <SelectItem value="laplacian">Laplacian Filter</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex justify-between items-end">
+            <div className="flex gap-6">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem className="w-[250px]">
+                    <Label htmlFor="filterType">Filter Type</Label>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue={field.value}
+                    >
+                      <FormControl id="filterType">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a filter" defaultValue={field.value} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Filters</SelectLabel>
 
-          <Button onClick={handleClick}>Filter</Button>
-          {/* <Button onClick={handleDownloadClick}>Download</Button> */}
-          {/* <a
-            href={processedImageURL ?? ''}
-            download
-            style={{ display: 'none' }}
-            ref={downloadRef}
-          /> */}
-        </div>
+                          {typesOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-2">
+                {inputs.find((input) => input.value === form.watch('type')) &&
+                  inputs
+                    .find((input) => input.value === form.watch('type'))
+                    ?.inputs.map((input, index) => {
+                      return (
+                        <FormField
+                          key={index}
+                          control={form.control}
+                          name={input.name}
+                          render={({ field }) => (
+                            <FormItem className="w-[150px]">
+                              <Label htmlFor={input.name}>{input.label}</Label>
+                              <Input
+                                type="number"
+                                id={input.name}
+                                min={input.min}
+                                max={input.max}
+                                step={input.step}
+                                onChange={(e) => {
+                                  field.onChange(Number(e.target.value));
+                                }}
+                                value={field.value}
+                                defaultValue={field.value}
+                              />
+                            </FormItem>
+                          )}
+                        />
+                      );
+                    })}
+              </div>
+            </div>
+            <Button type="submit">Apply Filter</Button>
+          </form>
+        </Form>
       </div>
       <div className="flex flex-col md:flex-row gap-4 w-full">
         <Dropzone index={0} />

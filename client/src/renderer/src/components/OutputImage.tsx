@@ -1,5 +1,6 @@
-import useGlobalState from '@renderer/hooks/useGlobalState';
 import { Card } from './ui/card';
+
+import useGlobalState from '@renderer/hooks/useGlobalState';
 
 interface OutputImageProps {
   index: number;
