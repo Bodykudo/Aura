@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
+import axios from 'axios';
 
 let mainWindow: BrowserWindow;
 function createWindow(): void {
@@ -71,9 +72,18 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
 ipcMain.on('upload:data', async (_, args) => {
-  const result = args.file;
-  console.log(args);
-  // const result = await handleUploadFile(args.file)
-  mainWindow.webContents.send('upload:done', { data: result });
+  // const result = args.file;
+  // mainWindow.webContents.send('upload:done', { data: result });
+  // await for 5 seconds
+  setTimeout(() => {
+    mainWindow.webContents.send('upload:done', { data: 'done' });
+  }, 5000);
   return true;
+});
+
+ipcMain.on('get:image', async (event) => {
+  console.log('TEWTEtew');
+  const response = await axios.get('http://127.0.0.1:5000/image', { responseType: 'arraybuffer' });
+  const base64Image = `data:${response.headers['content-type']};base64,${Buffer.from(response.data, 'binary').toString('base64')}`;
+  event.reply('image:received', base64Image);
 });
