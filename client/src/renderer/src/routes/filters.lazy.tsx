@@ -3,7 +3,9 @@ import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FilterX } from 'lucide-react';
 
+import Heading from '@renderer/components/Heading';
 import Dropzone from '@renderer/components/Dropzone';
 import OutputImage from '@renderer/components/OutputImage';
 import { Form, FormControl, FormField, FormItem } from '@renderer/components/ui/form';
@@ -96,82 +98,91 @@ function Filters() {
   };
 
   return (
-    <div className="px-4 py-6">
-      <div className="mb-4">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex justify-between items-end">
-            <div className="flex gap-6">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem className="w-[250px]">
-                    <Label htmlFor="filterType">Filter Type</Label>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      defaultValue={field.value}
-                    >
-                      <FormControl id="filterType">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a filter" defaultValue={field.value} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Filters</SelectLabel>
+    <div>
+      <Heading
+        title="Filters"
+        description="Apply filters to an image to enhance or remove certain features."
+        icon={FilterX}
+        iconColor="text-pink-700"
+        bgColor="bg-pink-700/10"
+      />
+      <div className="px-4 lg:px-8">
+        <div className="mb-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex justify-between items-end">
+              <div className="flex gap-6">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem className="w-[250px]">
+                      <Label htmlFor="filterType">Filter Type</Label>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        defaultValue={field.value}
+                      >
+                        <FormControl id="filterType">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a filter" defaultValue={field.value} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Filters</SelectLabel>
 
-                          {typesOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
+                            {typesOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
 
-              <div className="flex gap-2">
-                {inputs.find((input) => input.value === form.watch('type')) &&
-                  inputs
-                    .find((input) => input.value === form.watch('type'))
-                    ?.inputs.map((input, index) => {
-                      return (
-                        <FormField
-                          key={index}
-                          control={form.control}
-                          name={input.name}
-                          render={({ field }) => (
-                            <FormItem className="w-[150px]">
-                              <Label htmlFor={input.name}>{input.label}</Label>
-                              <Input
-                                type="number"
-                                id={input.name}
-                                min={input.min}
-                                max={input.max}
-                                step={input.step}
-                                onChange={(e) => {
-                                  field.onChange(Number(e.target.value));
-                                }}
-                                value={field.value}
-                                defaultValue={field.value}
-                              />
-                            </FormItem>
-                          )}
-                        />
-                      );
-                    })}
+                <div className="flex gap-2">
+                  {inputs.find((input) => input.value === form.watch('type')) &&
+                    inputs
+                      .find((input) => input.value === form.watch('type'))
+                      ?.inputs.map((input, index) => {
+                        return (
+                          <FormField
+                            key={index}
+                            control={form.control}
+                            name={input.name}
+                            render={({ field }) => (
+                              <FormItem className="w-[150px]">
+                                <Label htmlFor={input.name}>{input.label}</Label>
+                                <Input
+                                  type="number"
+                                  id={input.name}
+                                  min={input.min}
+                                  max={input.max}
+                                  step={input.step}
+                                  onChange={(e) => {
+                                    field.onChange(Number(e.target.value));
+                                  }}
+                                  value={field.value}
+                                  defaultValue={field.value}
+                                />
+                              </FormItem>
+                            )}
+                          />
+                        );
+                      })}
+                </div>
               </div>
-            </div>
-            <Button type="submit">Apply Filter</Button>
-          </form>
-        </Form>
-      </div>
-      <div className="flex flex-col md:flex-row gap-4 w-full">
-        <Dropzone index={0} />
-        <OutputImage index={0} />
+              <Button type="submit">Apply Filter</Button>
+            </form>
+          </Form>
+        </div>
+        <div className="flex flex-col md:flex-row gap-4 w-full">
+          <Dropzone index={0} />
+          <OutputImage index={0} />
+        </div>
       </div>
     </div>
   );

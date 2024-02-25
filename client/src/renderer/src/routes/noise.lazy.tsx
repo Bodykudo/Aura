@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import Heading from '@renderer/components/Heading';
 import Dropzone from '@renderer/components/Dropzone';
 import OutputImage from '@renderer/components/OutputImage';
 import { Form, FormControl, FormField, FormItem } from '@renderer/components/ui/form';
@@ -21,6 +22,7 @@ import {
 import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
+import { AudioLines } from 'lucide-react';
 
 const noiseSchema = z.object({
   type: z.enum(['uniform', 'gaussian', 'salt_pepper']).nullable(),
@@ -100,82 +102,94 @@ function Noise() {
   };
 
   return (
-    <div className="px-4 py-6">
-      <div className="mb-4">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex justify-between items-end">
-            <div className="flex gap-6">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem className="w-[250px]">
-                    <Label htmlFor="noiseType">Noise Type</Label>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      defaultValue={field.value}
-                    >
-                      <FormControl id="noiseType">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select noise type" defaultValue={field.value} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Noise Types</SelectLabel>
+    <div>
+      <Heading
+        title="Noise"
+        description="Apply noise to an image to simulate real-world conditions."
+        icon={AudioLines}
+        iconColor="text-violet-500"
+        bgColor="bg-violet-500/10"
+      />
+      <div className="px-4 lg:px-8">
+        <div className="mb-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex justify-between items-end">
+              <div className="flex gap-6">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem className="w-[250px]">
+                      <Label htmlFor="noiseType">Noise Type</Label>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        defaultValue={field.value}
+                      >
+                        <FormControl id="noiseType">
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder="Select noise type"
+                              defaultValue={field.value}
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Noise Types</SelectLabel>
 
-                          {typesOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
+                            {typesOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
 
-              <div className="flex gap-2">
-                {inputs.find((input) => input.value === form.watch('type')) &&
-                  inputs
-                    .find((input) => input.value === form.watch('type'))
-                    ?.inputs.map((input, index) => {
-                      return (
-                        <FormField
-                          key={index}
-                          control={form.control}
-                          name={input.name}
-                          render={({ field }) => (
-                            <FormItem className="w-[150px]">
-                              <Label htmlFor={input.name}>{input.label}</Label>
-                              <Input
-                                type="number"
-                                id={input.name}
-                                min={input.min}
-                                max={input.max}
-                                step={input.step}
-                                onChange={(e) => {
-                                  field.onChange(Number(e.target.value));
-                                }}
-                                value={field.value}
-                                defaultValue={field.value}
-                              />
-                            </FormItem>
-                          )}
-                        />
-                      );
-                    })}
+                <div className="flex gap-2">
+                  {inputs.find((input) => input.value === form.watch('type')) &&
+                    inputs
+                      .find((input) => input.value === form.watch('type'))
+                      ?.inputs.map((input, index) => {
+                        return (
+                          <FormField
+                            key={index}
+                            control={form.control}
+                            name={input.name}
+                            render={({ field }) => (
+                              <FormItem className="w-[150px]">
+                                <Label htmlFor={input.name}>{input.label}</Label>
+                                <Input
+                                  type="number"
+                                  id={input.name}
+                                  min={input.min}
+                                  max={input.max}
+                                  step={input.step}
+                                  onChange={(e) => {
+                                    field.onChange(Number(e.target.value));
+                                  }}
+                                  value={field.value}
+                                  defaultValue={field.value}
+                                />
+                              </FormItem>
+                            )}
+                          />
+                        );
+                      })}
+                </div>
               </div>
-            </div>
-            <Button type="submit">Apply Noise</Button>
-          </form>
-        </Form>
-      </div>
-      <div className="flex flex-col md:flex-row gap-4 w-full">
-        <Dropzone index={0} />
-        <OutputImage index={0} />
+              <Button type="submit">Apply Noise</Button>
+            </form>
+          </Form>
+        </div>
+        <div className="flex flex-col md:flex-row gap-4 w-full">
+          <Dropzone index={0} />
+          <OutputImage index={0} />
+        </div>
       </div>
     </div>
   );
