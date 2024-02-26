@@ -36,6 +36,7 @@
     "label": "^0.2.2",
     "lucide-react": "^0.331.0",
     "react-hook-form": "^7.50.1",
+    "recharts": "^2.12.1",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.22.4",
