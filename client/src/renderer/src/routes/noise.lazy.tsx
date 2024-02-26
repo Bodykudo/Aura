@@ -113,30 +113,26 @@ function Noise() {
       <div className="px-4 lg:px-8">
         <div className="mb-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex justify-between items-end">
-              <div className="flex gap-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="flex flex-wrap gap-4 justify-between items-end"
+            >
+              <div className="flex flex-wrap gap-2">
                 <FormField
                   control={form.control}
                   name="type"
                   render={({ field }) => (
-                    <FormItem className="w-[250px]">
+                    <FormItem className="w-[250px] mr-4">
                       <Label htmlFor="noiseType">Noise Type</Label>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange}>
                         <FormControl id="noiseType">
                           <SelectTrigger>
-                            <SelectValue
-                              placeholder="Select noise type"
-                              defaultValue={field.value}
-                            />
+                            <SelectValue placeholder="Select noise type" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectGroup>
-                            <SelectLabel>Noise Types</SelectLabel>
+                            <SelectLabel>Noise</SelectLabel>
 
                             {typesOptions.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
@@ -150,7 +146,7 @@ function Noise() {
                   )}
                 />
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {inputs.find((input) => input.value === form.watch('type')) &&
                     inputs
                       .find((input) => input.value === form.watch('type'))
@@ -158,23 +154,22 @@ function Noise() {
                         return (
                           <FormField
                             key={index}
-                            control={form.control}
                             name={input.name}
                             render={({ field }) => (
                               <FormItem className="w-[150px]">
                                 <Label htmlFor={input.name}>{input.label}</Label>
-                                <Input
-                                  type="number"
-                                  id={input.name}
-                                  min={input.min}
-                                  max={input.max}
-                                  step={input.step}
-                                  onChange={(e) => {
-                                    field.onChange(Number(e.target.value));
-                                  }}
-                                  value={field.value}
-                                  defaultValue={field.value}
-                                />
+                                <FormControl className="p-2">
+                                  <Input
+                                    type="number"
+                                    id={input.name}
+                                    min={input.min}
+                                    max={input.max}
+                                    step={input.step}
+                                    placeholder="A picture of a horse in Swiss alps."
+                                    {...field}
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                  />
+                                </FormControl>
                               </FormItem>
                             )}
                           />
@@ -182,7 +177,7 @@ function Noise() {
                       })}
                 </div>
               </div>
-              <Button type="submit">Apply Noise</Button>
+              <Button type="submit">Apply Filter</Button>
             </form>
           </Form>
         </div>

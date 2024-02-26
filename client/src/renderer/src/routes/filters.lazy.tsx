@@ -109,22 +109,21 @@ function Filters() {
       <div className="px-4 lg:px-8">
         <div className="mb-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex justify-between items-end">
-              <div className="flex gap-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="flex flex-wrap gap-4 justify-between items-end"
+            >
+              <div className="flex flex-wrap gap-2">
                 <FormField
                   control={form.control}
                   name="type"
                   render={({ field }) => (
-                    <FormItem className="w-[250px]">
+                    <FormItem className="w-[250px] mr-4">
                       <Label htmlFor="filterType">Filter Type</Label>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange}>
                         <FormControl id="filterType">
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a filter" defaultValue={field.value} />
+                            <SelectValue placeholder="Select a filter" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -143,7 +142,7 @@ function Filters() {
                   )}
                 />
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {inputs.find((input) => input.value === form.watch('type')) &&
                     inputs
                       .find((input) => input.value === form.watch('type'))
@@ -151,23 +150,21 @@ function Filters() {
                         return (
                           <FormField
                             key={index}
-                            control={form.control}
                             name={input.name}
                             render={({ field }) => (
                               <FormItem className="w-[150px]">
                                 <Label htmlFor={input.name}>{input.label}</Label>
-                                <Input
-                                  type="number"
-                                  id={input.name}
-                                  min={input.min}
-                                  max={input.max}
-                                  step={input.step}
-                                  onChange={(e) => {
-                                    field.onChange(Number(e.target.value));
-                                  }}
-                                  value={field.value}
-                                  defaultValue={field.value}
-                                />
+                                <FormControl className="p-2">
+                                  <Input
+                                    type="number"
+                                    id={input.name}
+                                    min={input.min}
+                                    max={input.max}
+                                    step={input.step}
+                                    {...field}
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                  />
+                                </FormControl>
                               </FormItem>
                             )}
                           />
