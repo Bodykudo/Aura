@@ -4,28 +4,27 @@ import cv2
 
 class Filter:
     @staticmethod
-    def apply_avg_filter(image,kernel_size):
+    def apply_avg_filter(image_path,kernel_size):
 
-        # Read Image and convert it to grayscale
+        original_image = cv2.imread(image_path)
+        image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
+        height, width, channels = image.shape
+        result_image = np.zeros_like(image, dtype=np.uint8)
 
-        original_image = cv2.imread(image)
-        filtered_image = original_image.copy()
-        rows, cols = original_image.shape
 
-        # Check that Kernel size is ODD
+        for i in range(height):
+            for j in range(width):
+                neighborhood = image[max(0, i - kernel_size // 2):min(height, i + kernel_size // 2 + 1),
+                               max(0, j - kernel_size // 2):min(width, j + kernel_size // 2 + 1)]
 
-        if kernel_size % 2 == 0:
-            kernel_size += 1
 
-        half_kernel = kernel_size // 2
+                average_value = np.mean(neighborhood, axis=(0, 1))
 
-        for i in range(half_kernel, rows - half_kernel):
-            for j in range(half_kernel, cols - half_kernel):
-                neighborhood = original_image[i - half_kernel:i + half_kernel + 1, j - half_kernel:j + half_kernel + 1]
-                average_value = np.mean(neighborhood)
-                filtered_image[i, j] = int(average_value)
 
-        return filtered_image
+                result_image[i, j] = np.round(average_value).astype(np.uint8)
+
+
+        return result_image
 
     @staticmethod
     def apply_gaussian_filter(image):
