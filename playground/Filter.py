@@ -8,7 +8,7 @@ class Filter:
 
         # Read Image and convert it to grayscale
 
-        original_image = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
+        original_image = cv2.imread(image)
         filtered_image = original_image.copy()
         rows, cols = original_image.shape
 
