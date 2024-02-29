@@ -57,9 +57,13 @@ app.on('window-all-closed', () => {
 
 ipcMain.on('upload:data', async (event, args) => {
   if (args.file) {
-    const data = await handleUploadImage(args.file);
-    event.reply('upload:done', { data: data });
-    return true;
+    try {
+      const data = await handleUploadImage(args.file);
+      event.reply('upload:done', { data: data });
+      return true;
+    } catch (error) {
+      event.reply('upload:error');
+    }
   }
   return false;
 });
@@ -69,7 +73,7 @@ ipcMain.on('process:image', async (event, args) => {
   const url = args.url;
   const response = await axios.post(url, body);
   if (response.status !== 200) {
-    event.reply('image:error', response.data);
+    event.reply('image:error');
     return false;
   }
   event.reply('image:received', response.data);

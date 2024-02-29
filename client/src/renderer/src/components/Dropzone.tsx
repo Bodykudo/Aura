@@ -3,6 +3,7 @@ import { Cloud, File, Loader2, Upload } from 'lucide-react';
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
+import { useToast } from './ui/use-toast';
 
 interface DropzoneProps {
   index: number;
@@ -12,10 +13,12 @@ export default function Dropzone({ index }: DropzoneProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isUploaded, setIsUploaded] = useState(false);
   const [isHover, setIsHover] = useState(false);
-  const [progressValue, setProgressValue] = useState(0);
+
   const [progressInterval, setProgressInterval] = useState<NodeJS.Timeout | null>(null);
+  const [progressValue, setProgressValue] = useState(0);
   const [currentFilePath, setCurrentFilePath] = useState<string | null>(null);
 
+  const { toast } = useToast();
   const dropArea = useRef<HTMLLabelElement>(null);
 
   const { uploadedImagesURLs, setUploadedImageURL, setFileId, setProcessedImageURL } =
@@ -25,7 +28,6 @@ export default function Dropzone({ index }: DropzoneProps) {
 
   const startSimulateProgress = () => {
     setProgressValue(0);
-
     const interval = setInterval(() => {
       setProgressValue((value) => {
         if (value >= 90) {
@@ -43,6 +45,10 @@ export default function Dropzone({ index }: DropzoneProps) {
     ipcRenderer.on('upload:done', (event: any) => {
       setIsUploading(false);
       if (event.data.id) {
+        toast({
+          title: 'Image uploaded',
+          description: 'Your image has been uploaded successfully.'
+        });
         setFileId(index, event.data.id);
       }
       if (progressInterval) {
@@ -52,11 +58,23 @@ export default function Dropzone({ index }: DropzoneProps) {
       setIsUploaded(true);
       setProgressInterval(null);
     });
+
+    ipcRenderer.on('upload:error', () => {
+      toast({
+        title: 'Something went wrong',
+        description: "Your image couldn't be uploaded, please try again later.",
+        variant: 'destructive'
+      });
+      setIsUploading(false);
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+      setProgressInterval(null);
+    });
   }, [progressInterval]);
 
   useEffect(() => {
     const dropAreaElement = dropArea.current;
-
     if (dropAreaElement) {
       dropAreaElement.addEventListener('dragover', handleDragOver);
       dropAreaElement.addEventListener('dragleave', handleDragLeave);
@@ -103,6 +121,11 @@ export default function Dropzone({ index }: DropzoneProps) {
         console.log('Unsupported file, please upload only PNG, JPG, or JPEG files.');
         return;
       }
+
+      const file = files[0];
+      setCurrentFilePath(file.path);
+      const url = URL.createObjectURL(file);
+      setUploadedImageURL(index, url);
     }
   };
 

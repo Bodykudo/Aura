@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -23,6 +23,7 @@ import {
 import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
+import { useToast } from '@renderer/components/ui/use-toast';
 
 const filtersSchema = z.object({
   type: z.enum(['average', 'gaussian', 'median']).nullable(),
@@ -57,7 +58,7 @@ const inputs = [
 function Filters() {
   const ipcRenderer = (window as any).ipcRenderer;
   const { filesIds, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
-  // const downloadRef = useRef<HTMLAnchorElement | null>(null);
+  const [isProcessing, setIsProcessing] = useState(true);
 
   const form = useForm<z.infer<typeof filtersSchema>>({
     resolver: zodResolver(filtersSchema),
@@ -66,6 +67,8 @@ function Filters() {
       sigma: 1
     }
   });
+
+  const { toast } = useToast();
 
   useEffect(() => {
     setUploadedImageURL(0, null);
@@ -77,18 +80,18 @@ function Filters() {
       if (event.image) {
         setProcessedImageURL(0, event.image);
       }
+      setIsProcessing(false);
     });
 
     ipcRenderer.on('image:error', () => {
-      console.log('Something went wrong.');
+      toast({
+        title: 'Something went wrong',
+        description: "Your image couldn't be filtered, please try again later.",
+        variant: 'destructive'
+      });
+      setIsProcessing(false);
     });
   }, []);
-
-  // const handleDownloadClick = () => {
-  // if (processedImagesURLs && downloadRef.current) {
-  //     downloadRef.current.click();
-  //   }
-  // };
 
   const onSubmit = (data: z.infer<typeof filtersSchema>) => {
     const body = {
@@ -98,6 +101,7 @@ function Filters() {
       sigma: data.sigma
     };
 
+    setIsProcessing(true);
     ipcRenderer.send('process:image', { body, url: 'XXX/api/filter' });
   };
 
@@ -124,7 +128,7 @@ function Filters() {
                   render={({ field }) => (
                     <FormItem className="w-[250px] mr-4">
                       <Label htmlFor="filterType">Filter Type</Label>
-                      <Select onValueChange={field.onChange}>
+                      <Select disabled={isProcessing} onValueChange={field.onChange}>
                         <FormControl id="filterType">
                           <SelectTrigger>
                             <SelectValue placeholder="Select a filter" />
@@ -161,6 +165,7 @@ function Filters() {
                                 <FormControl className="p-2">
                                   <Input
                                     type="number"
+                                    disabled={isProcessing}
                                     id={input.name}
                                     min={input.min}
                                     max={input.max}
@@ -176,7 +181,9 @@ function Filters() {
                       })}
                 </div>
               </div>
-              <Button type="submit">Apply Filter</Button>
+              <Button disabled={!filesIds[0] || isProcessing} type="submit">
+                Apply Filter
+              </Button>
             </form>
           </Form>
         </div>
