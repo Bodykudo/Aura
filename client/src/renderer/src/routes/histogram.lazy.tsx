@@ -24,8 +24,6 @@ import { Button } from '@renderer/components/ui/button';
 import useGlobalState from '@renderer/hooks/useGlobalState';
 import { BarChartBig } from 'lucide-react';
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -60,7 +58,7 @@ const inputs = [
 
 function Histogram() {
   const ipcRenderer = (window as any).ipcRenderer;
-  const { setProcessedImageURL } = useGlobalState();
+  const { setUploadedImageURL, setProcessedImageURL } = useGlobalState();
   // const downloadRef = useRef<HTMLAnchorElement | null>(null);
 
   const form = useForm<z.infer<typeof noiseSchema>>({
@@ -70,6 +68,11 @@ function Histogram() {
       maxWidth: 200
     }
   });
+
+  useEffect(() => {
+    setUploadedImageURL(0, null);
+    setProcessedImageURL(0, null);
+  }, []);
 
   useEffect(() => {
     // ipcRenderer.on('upload:done', (event: any) => {
@@ -164,7 +167,6 @@ function Histogram() {
                                     min={input.min}
                                     max={input.max}
                                     step={input.step}
-                                    placeholder="A picture of a horse in Swiss alps."
                                     {...field}
                                     onChange={(e) => field.onChange(Number(e.target.value))}
                                   />

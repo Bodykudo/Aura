@@ -17,7 +17,7 @@ export default function OutputImage({ index }: OutputImageProps) {
           style={
             processedImagesURLs[index]
               ? {
-                  backgroundImage: `url(${processedImagesURLs[index]})`
+                  backgroundImage: `url(data:image/jpeg;base64,${processedImagesURLs[index]})`
                 }
               : {}
           }

@@ -165,7 +165,6 @@ function Noise() {
                                     min={input.min}
                                     max={input.max}
                                     step={input.step}
-                                    placeholder="A picture of a horse in Swiss alps."
                                     {...field}
                                     onChange={(e) => field.onChange(Number(e.target.value))}
                                   />

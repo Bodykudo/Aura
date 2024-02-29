@@ -56,7 +56,7 @@ const inputs = [
 
 function Filters() {
   const ipcRenderer = (window as any).ipcRenderer;
-  const { setProcessedImageURL } = useGlobalState();
+  const { filesIds, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
   // const downloadRef = useRef<HTMLAnchorElement | null>(null);
 
   const form = useForm<z.infer<typeof filtersSchema>>({
@@ -68,23 +68,21 @@ function Filters() {
   });
 
   useEffect(() => {
-    // ipcRenderer.on('upload:done', (event: any) => {
-    //   console.log(event);
-    //   if (event?.data) {
-    //     console.log(event.data);
-    //   }
-    // });
-    ipcRenderer.on('image:received', (event: any) => {
-      console.log(event);
-      console.log(event);
-      setProcessedImageURL(0, event);
-    });
+    setUploadedImageURL(0, null);
+    setProcessedImageURL(0, null);
   }, []);
 
-  // const handleClick = () => {
-  //   console.log('clicked');
-  //   ipcRenderer.send('get:image');
-  // };
+  useEffect(() => {
+    ipcRenderer.on('image:received', (event: any) => {
+      if (event.image) {
+        setProcessedImageURL(0, event.image);
+      }
+    });
+
+    ipcRenderer.on('image:error', () => {
+      console.log('Something went wrong.');
+    });
+  }, []);
 
   // const handleDownloadClick = () => {
   // if (processedImagesURLs && downloadRef.current) {
@@ -93,8 +91,14 @@ function Filters() {
   // };
 
   const onSubmit = (data: z.infer<typeof filtersSchema>) => {
-    console.log(data);
-    // ipcRenderer.send('process:image', data);
+    const body = {
+      imageId: filesIds[0],
+      filterType: data.type,
+      kernelSize: data.kernelSize,
+      sigma: data.sigma
+    };
+
+    ipcRenderer.send('process:image', { body, url: 'XXX/api/filter' });
   };
 
   return (

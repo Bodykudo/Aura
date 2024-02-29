@@ -42,10 +42,13 @@ export default function Dropzone({ index }: DropzoneProps) {
   useEffect(() => {
     ipcRenderer.on('upload:done', (event: any) => {
       setIsUploading(false);
-      setFileId(index, 'TEST');
+      if (event.data.id) {
+        setFileId(index, event.data.id);
+      }
       if (progressInterval) {
         clearInterval(progressInterval);
       }
+      setIsUploading(false);
       setIsUploaded(true);
       setProgressInterval(null);
     });

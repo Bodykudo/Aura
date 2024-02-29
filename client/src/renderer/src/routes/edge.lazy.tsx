@@ -79,7 +79,7 @@ const inputs = [
 
 function Edge() {
   const ipcRenderer = (window as any).ipcRenderer;
-  const { setProcessedImageURL } = useGlobalState();
+  const { setUploadedImageURL, setProcessedImageURL } = useGlobalState();
   // const downloadRef = useRef<HTMLAnchorElement | null>(null);
 
   const form = useForm<z.infer<typeof noiseSchema>>({
@@ -92,6 +92,11 @@ function Edge() {
       upperThreshold: 150
     }
   });
+
+  useEffect(() => {
+    setUploadedImageURL(0, null);
+    setProcessedImageURL(0, null);
+  }, []);
 
   useEffect(() => {
     // ipcRenderer.on('upload:done', (event: any) => {
