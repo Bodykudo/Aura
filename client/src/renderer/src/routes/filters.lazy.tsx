@@ -25,13 +25,15 @@ import { Button } from '@renderer/components/ui/button';
 import useGlobalState from '@renderer/hooks/useGlobalState';
 import { useToast } from '@renderer/components/ui/use-toast';
 
+import placeholder from '@renderer/assets/placeholder.png';
+
 const filtersSchema = z.object({
   type: z.enum(['average', 'gaussian', 'median']).nullable(),
   kernelSize: z.number(),
   sigma: z.number()
 });
 
-const typesOptions = [
+const filtersOptions = [
   { label: 'Average Filter', value: 'average' },
   { label: 'Gaussian Filter', value: 'gaussian' },
   { label: 'Median Filter', value: 'median' }
@@ -57,6 +59,7 @@ const inputs = [
 
 function Filters() {
   const ipcRenderer = (window as any).ipcRenderer;
+
   const { filesIds, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
   const [isProcessing, setIsProcessing] = useState(true);
 
@@ -76,22 +79,34 @@ function Filters() {
   }, []);
 
   useEffect(() => {
-    ipcRenderer.on('image:received', (event: any) => {
+    const imageReceivedListener = (event: any) => {
       if (event.image) {
         setProcessedImageURL(0, event.image);
       }
       setIsProcessing(false);
-    });
+    };
+    ipcRenderer.on('image:received', imageReceivedListener);
 
-    ipcRenderer.on('image:error', () => {
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
+  }, []);
+
+  useEffect(() => {
+    const imageErrorListener = () => {
       toast({
         title: 'Something went wrong',
         description: "Your image couldn't be filtered, please try again later.",
         variant: 'destructive'
       });
       setIsProcessing(false);
-    });
-  }, []);
+    };
+    ipcRenderer.on('image:error', imageErrorListener);
+
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
+  });
 
   const onSubmit = (data: z.infer<typeof filtersSchema>) => {
     const body = {
@@ -138,7 +153,7 @@ function Filters() {
                           <SelectGroup>
                             <SelectLabel>Filters</SelectLabel>
 
-                            {typesOptions.map((option) => (
+                            {filtersOptions.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
@@ -189,7 +204,7 @@ function Filters() {
         </div>
         <div className="flex flex-col md:flex-row gap-4 w-full">
           <Dropzone index={0} />
-          <OutputImage index={0} />
+          <OutputImage index={0} placeholder={placeholder} />
         </div>
       </div>
     </div>

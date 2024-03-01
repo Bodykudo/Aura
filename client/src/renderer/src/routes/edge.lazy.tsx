@@ -24,6 +24,8 @@ import { Button } from '@renderer/components/ui/button';
 import useGlobalState from '@renderer/hooks/useGlobalState';
 import { ScanIcon } from 'lucide-react';
 
+import placeholder from '@renderer/assets/placeholder2.png';
+
 const noiseSchema = z.object({
   type: z.enum(['sobel', 'roberts', 'perwitt', 'canny']).nullable(),
   direction: z.enum(['x', 'y', 'both']).nullable(),
@@ -244,7 +246,7 @@ function Edge() {
         </div>
         <div className="flex flex-col md:flex-row gap-4 w-full">
           <Dropzone index={0} />
-          <OutputImage index={0} />
+          <OutputImage index={0} placeholder={placeholder} />
         </div>
       </div>
     </div>
