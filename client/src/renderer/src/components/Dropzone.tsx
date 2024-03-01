@@ -150,8 +150,8 @@ export default function Dropzone({ index }: DropzoneProps) {
       <label
         ref={dropArea}
         htmlFor="poster"
-        className={`relative hover:bg-gray-300 transition-all duration-300 h-72 lg:h-80 xl:h-96 rounded-md shadow-sm border-2 border-dashed cursor-pointer flex items-center justify-center  border-gray-400 outline-none ${
-          isHover ? 'bg-gray-300' : 'bg-gray-300/70'
+        className={`relative hover:bg-gray-300 dark:hover:bg-gray-700 transition-all duration-300 h-72 lg:h-80 xl:h-96 rounded-md shadow-sm border-2 border-dashed cursor-pointer flex items-center justify-center  border-gray-400 dark:border-gray-600 outline-none ${
+          isHover ? 'bg-gray-300 dark:bg-gray-700' : 'bg-gray-300/70 dark:bg-gray-700/70'
         }`}
       >
         <input
