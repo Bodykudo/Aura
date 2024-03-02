@@ -80,9 +80,8 @@ function Filters() {
 
   useEffect(() => {
     const imageReceivedListener = (event: any) => {
-      if (event.output) {
-        console.log(event.output);
-        setProcessedImageURL(0, event.output);
+      if (event.data.image) {
+        setProcessedImageURL(0, event.data.image);
       }
       setIsProcessing(false);
     };

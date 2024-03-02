@@ -3,6 +3,7 @@ import cv2
 import base64
 from secrets import token_hex
 import time
+import numpy as np
 
 from fastapi import HTTPException
 from api.config import uploads_folder
@@ -34,7 +35,9 @@ def get_image(image_id):
 
 
 def convert_image(output_image):
-    is_success, buffer = cv2.imencode(".jpg", output_image)
+    is_success, buffer = cv2.imencode(
+        ".jpg", cv2.cvtColor(output_image, cv2.COLOR_RGB2BGR)
+    )
 
     if is_success:
         base64_image = base64.b64encode(buffer).decode("utf-8")

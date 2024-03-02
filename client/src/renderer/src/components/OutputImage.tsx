@@ -16,7 +16,7 @@ export default function OutputImage({ index, placeholder }: OutputImageProps) {
         <div className="h-full w-full relative overflow-hidden">
           {processedImagesURLs[index] ? (
             <img
-              src={processedImagesURLs[index] ?? ''}
+              src={`data:image/jpg;base64,${processedImagesURLs[index]}`}
               className="absolute h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
               alt="uploaded image"
             />

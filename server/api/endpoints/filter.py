@@ -7,7 +7,7 @@ from api.services.filter_service import Filter
 
 router = APIRouter()
 
-filter_types = ["average", "guassian", "median"]
+filter_types = ["average", "gaussian", "median"]
 
 
 @router.post("/api/filter/{image_id}")
@@ -20,7 +20,7 @@ async def applyFilter(image_id: str, filter: FilterModel):
     filtered_image = None
     if filter.type == "average":
         filtered_image = Filter.apply_avg_filter(image_path, filter.kernelSize)
-    elif filter.type == "guassian":
+    elif filter.type == "gaussian":
         filtered_image = Filter.apply_gaussian_filter(
             image_path, filter.kernelSize, filter.sigma
         )

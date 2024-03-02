@@ -76,6 +76,6 @@ ipcMain.on('process:image', async (event, args) => {
     event.reply('image:error');
     return false;
   }
-  event.reply('image:received', response.data);
+  event.reply('image:received', { data: response.data });
   return true;
 });
