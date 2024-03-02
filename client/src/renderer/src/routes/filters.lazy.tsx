@@ -60,7 +60,7 @@ const inputs = [
 function Filters() {
   const ipcRenderer = (window as any).ipcRenderer;
 
-  const { filesIds, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
+  const { filesIds, setFileId, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const form = useForm<z.infer<typeof filtersSchema>>({
@@ -74,6 +74,7 @@ function Filters() {
   const { toast } = useToast();
 
   useEffect(() => {
+    setFileId(0, null);
     setUploadedImageURL(0, null);
     setProcessedImageURL(0, null);
   }, []);
@@ -171,10 +172,10 @@ function Filters() {
                   {inputs.find((input) => input.value === form.watch('type')) &&
                     inputs
                       .find((input) => input.value === form.watch('type'))
-                      ?.inputs.map((input, index) => {
+                      ?.inputs.map((input) => {
                         return (
                           <FormField
-                            key={index}
+                            key={input.label}
                             name={input.name}
                             render={({ field }) => (
                               <FormItem className="w-[150px]">

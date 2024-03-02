@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -23,19 +23,21 @@ import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
 import { AudioLines } from 'lucide-react';
+import { useToast } from '@renderer/components/ui/use-toast';
 
 const noiseSchema = z.object({
-  type: z.enum(['uniform', 'gaussian', 'salt_pepper']).nullable(),
+  type: z.enum(['uniform', 'gaussian', 'salt_and_pepper']).nullable(),
   noiseValue: z.number(),
   mean: z.number(),
   variance: z.number(),
-  noiseProbability: z.number()
+  saltProbability: z.number(),
+  pepperProbability: z.number()
 });
 
 const typesOptions = [
   { label: 'Uniform Noise', value: 'uniform' },
   { label: 'Gaussian Noise', value: 'gaussian' },
-  { label: 'Salt & Pepper Filter', value: 'salt_pepper' }
+  { label: 'Salt & Pepper Filter', value: 'salt_and_pepper' }
 ];
 
 const inputs = [
@@ -51,15 +53,19 @@ const inputs = [
     ]
   },
   {
-    value: 'salt_pepper',
-    inputs: [{ label: 'Noise Probability', name: 'noiseProbability', min: 0, max: 1, step: 0.01 }]
+    value: 'salt_and_pepper',
+    inputs: [
+      { label: 'Salt Probability', name: 'saltProbability', min: 0, max: 1, step: 0.01 },
+      { label: 'Pepper Probability', name: 'pepperProbability', min: 0, max: 1, step: 0.01 }
+    ]
   }
 ];
 
 function Noise() {
   const ipcRenderer = (window as any).ipcRenderer;
-  const { setProcessedImageURL } = useGlobalState();
-  // const downloadRef = useRef<HTMLAnchorElement | null>(null);
+
+  const { filesIds, setFileId, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const form = useForm<z.infer<typeof noiseSchema>>({
     resolver: zodResolver(noiseSchema),
@@ -67,38 +73,64 @@ function Noise() {
       noiseValue: 50,
       mean: 20,
       variance: 5,
-      noiseProbability: 0.07
+      saltProbability: 0.05,
+      pepperProbability: 0.05
     }
   });
 
+  const { toast } = useToast();
+
   useEffect(() => {
-    // ipcRenderer.on('upload:done', (event: any) => {
-    //   console.log(event);
-    //   if (event?.data) {
-    //     console.log(event.data);
-    //   }
-    // });
-    ipcRenderer.on('image:received', (event: any) => {
-      console.log(event);
-      console.log(event);
-      setProcessedImageURL(0, event);
-    });
+    setFileId(0, null);
+    setUploadedImageURL(0, null);
+    setProcessedImageURL(0, null);
   }, []);
 
-  // const handleClick = () => {
-  //   console.log('clicked');
-  //   ipcRenderer.send('get:image');
-  // };
+  useEffect(() => {
+    const imageReceivedListener = (event: any) => {
+      if (event.data.image) {
+        setProcessedImageURL(0, event.data.image);
+      }
+      setIsProcessing(false);
+    };
+    ipcRenderer.on('image:received', imageReceivedListener);
 
-  // const handleDownloadClick = () => {
-  // if (processedImagesURLs && downloadRef.current) {
-  //     downloadRef.current.click();
-  //   }
-  // };
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
+  }, []);
+
+  useEffect(() => {
+    const imageErrorListener = () => {
+      toast({
+        title: 'Something went wrong',
+        description: "Your image couldn't be processed, please try again.",
+        variant: 'destructive'
+      });
+      setIsProcessing(false);
+    };
+    ipcRenderer.on('image:error', imageErrorListener);
+
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
+  });
 
   const onSubmit = (data: z.infer<typeof noiseSchema>) => {
-    console.log(data);
-    // ipcRenderer.send('process:image', data);
+    const body = {
+      type: data.type,
+      noiseValue: data.noiseValue,
+      mean: data.mean,
+      variance: data.variance,
+      saltProbability: data.saltProbability,
+      pepperProbability: data.pepperProbability
+    };
+
+    setIsProcessing(true);
+    ipcRenderer.send('process:image', {
+      body,
+      url: `http://127.0.0.1:8000/api/noise/${filesIds[0]}`
+    });
   };
 
   return (
@@ -124,7 +156,7 @@ function Noise() {
                   render={({ field }) => (
                     <FormItem className="w-[250px] mr-4">
                       <Label htmlFor="noiseType">Noise Type</Label>
-                      <Select onValueChange={field.onChange}>
+                      <Select disabled={isProcessing} onValueChange={field.onChange}>
                         <FormControl id="noiseType">
                           <SelectTrigger>
                             <SelectValue placeholder="Select noise type" />
@@ -150,10 +182,10 @@ function Noise() {
                   {inputs.find((input) => input.value === form.watch('type')) &&
                     inputs
                       .find((input) => input.value === form.watch('type'))
-                      ?.inputs.map((input, index) => {
+                      ?.inputs.map((input) => {
                         return (
                           <FormField
-                            key={index}
+                            key={input.label}
                             name={input.name}
                             render={({ field }) => (
                               <FormItem className="w-[150px]">
@@ -161,6 +193,7 @@ function Noise() {
                                 <FormControl className="p-2">
                                   <Input
                                     type="number"
+                                    disabled={isProcessing}
                                     id={input.name}
                                     min={input.min}
                                     max={input.max}
@@ -176,7 +209,9 @@ function Noise() {
                       })}
                 </div>
               </div>
-              <Button type="submit">Apply Filter</Button>
+              <Button disabled={!filesIds[0] || isProcessing} type="submit">
+                Apply Noise
+              </Button>
             </form>
           </Form>
         </div>
