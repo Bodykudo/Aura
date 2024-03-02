@@ -1,13 +1,11 @@
 import numpy as np
-import cv2
-from scipy.ndimage import convolve
-from utils import functions as f
+
+from api.utils import read_image
 
 class Filter:
     @staticmethod
     def apply_avg_filter(image_path,kernel_size):
-        print("Filtering")
-        image=f.read_image(image_path)
+        image=read_image(image_path)
         height, width, channels = image.shape
         result_image = np.zeros_like(image, dtype=np.uint8)
 
@@ -38,9 +36,9 @@ class Filter:
 
 
     @staticmethod
-    def apply_gaussian_filter(image_path, kernel):
-
-            image=f.read_image(image_path)
+    def apply_gaussian_filter(image_path, kernel_size, sigma):
+            kernel = Filter.gaussian_kernel(kernel_size, sigma)
+            image=read_image(image_path)
 
             image_height, image_width, channels = image.shape
             kernel_height, kernel_width = kernel.shape
@@ -69,7 +67,7 @@ class Filter:
 
     @staticmethod
     def apply_median_filter(image_path,kernel_size):
-        image=f.read_image(image_path)
+        image=read_image(image_path)
         output_image = np.zeros_like(image)
 
         half_kernel = kernel_size // 2
