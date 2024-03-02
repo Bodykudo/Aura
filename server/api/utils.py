@@ -16,9 +16,12 @@ def generate_image_id():
     return imageID
 
 
-def read_image(image_path):
+def read_image(image_path, grayscale=False):
     original_image = cv2.imread(image_path)
-    image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
+    if grayscale:
+        image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+    else:
+        image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
     return image
 
 
@@ -44,3 +47,51 @@ def convert_image(output_image):
         return base64_image
     else:
         raise ValueError("Failed to encode the image as Base64")
+
+
+def get_image_dimensions(image):
+    if len(image.shape) == 2:
+        height, width = image.shape
+        channels = 1
+    elif len(image.shape) == 3:
+        height, width, channels = image.shape
+    else:
+        raise ValueError("Unsupported image shape")
+
+    return height, width, channels
+
+
+def pad_image(image, kernel_size):
+    _, _, channels = get_image_dimensions(image)
+
+    pad = kernel_size // 2
+
+    if channels == 1:
+        padded_image = np.pad(image, ((pad, pad), (pad, pad)), mode="constant")
+    else:
+        padded_image = np.pad(image, ((pad, pad), (pad, pad), (0, 0)), mode="constant")
+
+    return padded_image, pad
+
+
+def convolve(image, kernel):
+    height, width, channels = get_image_dimensions(image)
+    padded_image, pad = pad_image(image, kernel.shape[0])
+
+    result = np.zeros_like(image, dtype=np.uint8)
+
+    for i in range(channels):
+        for y in range(pad, height + pad):
+            for x in range(pad, width + pad):
+                if channels == 1:
+                    result[y - pad, x - pad] = np.sum(
+                        padded_image[y - pad : y + pad + 1, x - pad : x + pad + 1]
+                        * kernel
+                    )
+                else:
+                    result[y - pad, x - pad, i] = np.sum(
+                        padded_image[y - pad : y + pad + 1, x - pad : x + pad + 1, i]
+                        * kernel
+                    )
+
+    return np.clip(result, 0, 255).astype(np.uint8)
