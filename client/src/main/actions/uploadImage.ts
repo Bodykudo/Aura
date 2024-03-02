@@ -23,7 +23,10 @@ export async function handleUploadImage(file: string) {
   formData.append('file', outputFile);
   formData.append('name', 'file');
 
-  const response = await axios.post('http://127.0.0.1:8000/api/upload', formData);
+  const response = await axios.post(
+    `${import.meta.env.MAIN_VITE_PUBLIC_API_URL}/api/upload`,
+    formData
+  );
 
   return response.data;
 }

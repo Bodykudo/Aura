@@ -119,7 +119,7 @@ function Filters() {
     setIsProcessing(true);
     ipcRenderer.send('process:image', {
       body,
-      url: `http://127.0.0.1:8000/api/filter/${filesIds[0]}`
+      url: `/api/filter/${filesIds[0]}`
     });
   };
 
