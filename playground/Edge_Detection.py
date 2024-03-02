@@ -2,7 +2,7 @@ import cv2
 import os
 import numpy as np
 from scipy.ndimage import convolve
-
+from matplotlib import pyplot as plt
 
 class Edge_Detection:
     
@@ -108,25 +108,105 @@ class Edge_Detection:
         return result
 
     
-    
     def Canny(self, image, low, high):
         image, angles = self.sobel_filter(image)
         image = self.non_maximum_suppression(image, angles)
         gradient = np.copy(image)
         image = self.double_threshold_hysteresis(image, low, high)
-        return image, gradient
+        return image
+    
+    def Prewitt(self, image):
+        image = self.gray_scale(image)
+        prewitt_operator_x = np.array([[1,1,1],
+                                       [0,0,0],
+                                       [-1,-1,-1]
+                                       ])
+        
+        prewitt_operator_y = np.array([[-1,0,1],
+                                       [-1,0,1],
+                                       [-1,0,1]
+                                       ])
+        
+        # Apply the kernels manually
+        image_height, image_width = image.shape
+        image_prewitt_x = np.zeros_like(image, dtype=np.float32)
+        image_prewitt_y = np.zeros_like(image, dtype=np.float32)
+
+        for y in range(1, image_height - 1):
+            for x in range(1, image_width - 1):
+                image_prewitt_x[y, x] = np.sum(image[y - 1:y + 2, x - 1:x + 2] * prewitt_operator_x)
+                image_prewitt_y[y, x] = np.sum(image[y - 1:y + 2, x - 1:x + 2] * prewitt_operator_y)
+
+        image_prewitt_x = np.clip(image_prewitt_x, 0, 255).astype(np.uint8)
+        image_prewitt_y = np.clip(image_prewitt_y, 0, 255).astype(np.uint8)
+        
+        # OR
+        # image_prewitt_x =  cv2.filter2D(image, -1, prewitt_operator_x)
+        # image_prewitt_y =  cv2.filter2D(image, -1, prewitt_operator_y)
+        
+        return image_prewitt_x, image_prewitt_y
+    
+    def Prewitt_Gradient(self, G_x, G_y):
+        # G = np.sqrt(G_x**2 + G_y**2)
+        G = G_x + G_y
+        G = (G / np.max(G)) * 255 # This line normalizes the values in the array to a range between 0 and 255.
+        G = np.clip(G, 0, 255).astype(np.uint8) # This line ensures that all values in the image_prewitt array are within the valid range of 8-bit unsigned integers (0 to 255).
+        return G
     
     
 if __name__ == "__main__":
-    image = cv2.imread('.\playground\cat.png')
-    image2 = cv2.imread('.\playground\image1.jpg')
-    image3 = cv2.imread('.\playground\image2.jpg')
     Edge = Edge_Detection()
-    image, gradient = Edge.Canny(image, 0, 50)
-    image2, gradient2 = Edge.Canny(image2, 0, 50)
-    image3, gradient3 = Edge.Canny(image3, 0, 30)
-    cv2.imshow('image', image)
-    cv2.imshow('image2', image2)
-    cv2.imshow('image3', image3)
+    
+    Cat = cv2.imread('.\playground\cat.png')
+    Kilua = cv2.imread('.\playground\image1.jpg')
+    Jane = cv2.imread('.\playground\image2.jpg')
+    
+    cat_with_canny = Edge.Canny(Cat, 0, 50)
+    kilua_with_canny = Edge.Canny(Kilua, 0, 50)
+    jane_with_canny = Edge.Canny(Jane, 0, 30)
+    
+    kilua_with_prewitt_x, kilua_with_prewitt_y= Edge.Prewitt(Kilua)
+
+    kilua_with_prewitt= Edge.Prewitt_Gradient(kilua_with_prewitt_x, kilua_with_prewitt_y)
+ 
+    # PLOT WITH plt
+    # plt.subplot(1, 3, 1)
+    # plt.imshow(cat_with_canny, cmap='gray')
+    # plt.title('cat_with_canny')
+
+
+    # plt.subplot(1, 3, 2)
+    # plt.imshow(kilua_with_canny, cmap='gray')
+    # plt.title('kilua_with_canny')
+
+
+    # plt.subplot(1, 3, 3)
+    # plt.imshow(jane_with_canny, cmap='gray')  
+    # plt.title('jane_with_canny')
+
+    # plt.subplot(3, 3, 1)
+    # plt.imshow(kilua_with_prewitt, cmap='gray')
+    # plt.title('kilua_with_prewitt')
+
+
+    # plt.subplot(3, 3, 2)
+    # plt.imshow(kilua_with_prewitt_x, cmap='gray')
+    # plt.title('kilua_with_prewitt_x')
+
+
+    # plt.subplot(3, 3, 3)
+    # plt.imshow(kilua_with_prewitt_y, cmap='gray')  
+    # plt.title('kilua_with_prewitt_y')
+
+    # plt.tight_layout()
+    # plt.show()
+    
+    # PLOT WITH CV2
+    cv2.imshow('kilua_with_prewitt', kilua_with_prewitt)
+    cv2.imshow('kilua_with_prewitt_x', kilua_with_prewitt_x)
+    cv2.imshow('kilua_with_prewitt_y', kilua_with_prewitt_y)
+    cv2.imshow('jane_with_canny', jane_with_canny)
+    cv2.imshow('kilua_with_canny', kilua_with_canny)
+    cv2.imshow('cat_with_canny', cat_with_canny)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
