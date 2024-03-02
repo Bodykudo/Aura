@@ -61,7 +61,7 @@ function Filters() {
   const ipcRenderer = (window as any).ipcRenderer;
 
   const { filesIds, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
-  const [isProcessing, setIsProcessing] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const form = useForm<z.infer<typeof filtersSchema>>({
     resolver: zodResolver(filtersSchema),
@@ -80,8 +80,9 @@ function Filters() {
 
   useEffect(() => {
     const imageReceivedListener = (event: any) => {
-      if (event.image) {
-        setProcessedImageURL(0, event.image);
+      if (event.output) {
+        console.log(event.output);
+        setProcessedImageURL(0, event.output);
       }
       setIsProcessing(false);
     };
@@ -110,14 +111,16 @@ function Filters() {
 
   const onSubmit = (data: z.infer<typeof filtersSchema>) => {
     const body = {
-      imageId: filesIds[0],
-      filterType: data.type,
+      type: data.type,
       kernelSize: data.kernelSize,
       sigma: data.sigma
     };
 
     setIsProcessing(true);
-    ipcRenderer.send('process:image', { body, url: 'XXX/api/filter' });
+    ipcRenderer.send('process:image', {
+      body,
+      url: `http://127.0.0.1:8000/api/filter/${filesIds[0]}`
+    });
   };
 
   return (

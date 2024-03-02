@@ -44,12 +44,12 @@ export default function Dropzone({ index }: DropzoneProps) {
   useEffect(() => {
     ipcRenderer.on('upload:done', (event: any) => {
       setIsUploading(false);
-      if (event.data.id) {
+      if (event.data.fileId) {
         toast({
           title: 'Image uploaded',
           description: 'Your image has been uploaded successfully.'
         });
-        setFileId(index, event.data.id);
+        setFileId(index, event.data.fileId);
       }
       if (progressInterval) {
         clearInterval(progressInterval);
