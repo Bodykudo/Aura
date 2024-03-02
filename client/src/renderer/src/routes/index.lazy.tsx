@@ -11,8 +11,16 @@ function Index() {
     <div>
       <div className="mb-8 space-y-4">
         <h2 className="text-2xl md:text-4xl font-bold text-center">
-          Aura - Image Processing Playground
+          <span className="font-extrabold bg-gradient-to-r from-orange-700 via-blue-500 to-green-400 animate-gradient text-transparent bg-clip-text">
+            Aura
+          </span>{' '}
+          - Image Processing Playground
         </h2>
+        <h3 className="text-lg md:text-xl font-medium text-center">
+          Powered by <span className="text-blue-700 font-bold">Electron</span>,{' '}
+          <span className="text-orange-700 font-bold">React</span>, and{' '}
+          <span className="text-green-700 font-bold">FastAPI</span>
+        </h3>
         <p className="text-muted-foreground font-light text-sm md:text-lg text-center">
           A playground for image processing algorithms, filters, and more. Explore and learn about
           the world of image processing.

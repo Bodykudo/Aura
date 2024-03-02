@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: illumn
+productName: aura
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: illumn
+  executableName: aura
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
