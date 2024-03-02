@@ -1,4 +1,4 @@
-from playground.Filter import Filter
+from Filter import Filter
 from matplotlib import pyplot as plt
 import numpy as np
 
