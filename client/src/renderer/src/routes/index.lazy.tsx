@@ -32,7 +32,8 @@ function Index() {
             key={route.href}
             onClick={() => navigate({ to: route.href })}
             className={cn(
-              'p-4 border-black/5 dark:border-gray-800 flex items-center justify-between hover:shadow-md transition-all cursor-pointer',
+              'p-4 border-black/5 dark:border-gray-800 flex items-center justify-between transition-all cursor-pointer',
+              'hover:shadow-md dark:hover:shadow-white/30',
               route.comingSoon && 'opacity-50 pointer-events-none'
             )}
           >
