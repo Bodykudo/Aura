@@ -172,7 +172,7 @@ export default function Dropzone({ index }: DropzoneProps) {
                 <div className="justify-center flex text-6xl">
                   <File />
                 </div>
-                <h3 className="text-center font-medium text-2xl">Yes, right there</h3>
+                <p className="text-center font-medium text-2xl">Yes, right there</p>
               </div>
             ) : (
               <div className="flex flex-col gap-6">
@@ -180,9 +180,9 @@ export default function Dropzone({ index }: DropzoneProps) {
                   <Cloud />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <h3 className="text-center font-medium text-2xl">
+                  <p className="text-center font-medium text-2xl">
                     Click, or drop your images here
-                  </h3>
+                  </p>
                   <p className="text-center font-medium text-sm">
                     Allowed Files: PNG, JPG, JPEG files
                   </p>
