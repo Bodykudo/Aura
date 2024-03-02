@@ -1,5 +1,5 @@
 {
-  "name": "illumn",
+  "name": "aura",
   "version": "1.0.0",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
@@ -36,6 +36,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "electron-updater": "^6.1.7",
+    "inter-ui": "^4.0.2",
     "label": "^0.2.2",
     "lucide-react": "^0.331.0",
     "next-themes": "^0.2.1",
