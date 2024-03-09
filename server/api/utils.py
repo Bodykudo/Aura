@@ -5,7 +5,7 @@ from secrets import token_hex
 import time
 import numpy as np
 from fastapi import HTTPException
-from server.api.config import uploads_folder
+from api.config import uploads_folder
 
 
 def generate_image_id():

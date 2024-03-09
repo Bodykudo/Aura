@@ -19,13 +19,13 @@ async def applyFilter(image_id: str, filter: FilterModel):
 
     filtered_image = None
     if filter.type == "average":
-        filtered_image = Filter.apply_avg_filter(image_path, filter.kernelSize)
+        filtered_image = Filter.average_filter(image_path, filter.kernelSize)
     elif filter.type == "gaussian":
-        filtered_image = Filter.apply_gaussian_filter(
+        filtered_image = Filter.gaussian_filter(
             image_path, filter.kernelSize, filter.sigma
         )
     elif filter.type == "median":
-        filtered_image = Filter.apply_median_filter(image_path, filter.kernelSize)
+        filtered_image = Filter.median_filter(image_path, filter.kernelSize)
 
     filtered_image = convert_image(filtered_image)
 
