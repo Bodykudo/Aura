@@ -4,9 +4,8 @@ import base64
 from secrets import token_hex
 import time
 import numpy as np
-
 from fastapi import HTTPException
-from api.config import uploads_folder
+from server.api.config import uploads_folder
 
 
 def generate_image_id():
@@ -17,10 +16,10 @@ def generate_image_id():
 
 
 def read_image(image_path, grayscale=False):
-    original_image = cv2.imread(image_path)
     if grayscale:
-        image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     else:
+        original_image = cv2.imread(image_path)
         image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
     return image
 
