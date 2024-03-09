@@ -94,3 +94,9 @@ def convolve(image, kernel):
                     )
 
     return np.clip(result, 0, 255).astype(np.uint8)
+
+def compute_fft(image):
+        f_transform = np.fft.fft2(image)
+        f_transform_shifted = np.fft.fftshift(f_transform)
+        return f_transform_shifted
+
