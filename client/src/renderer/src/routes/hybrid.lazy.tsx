@@ -1,21 +1,33 @@
+import { useEffect } from 'react';
+import { createLazyFileRoute } from '@tanstack/react-router';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import Dropzone from '@renderer/components/Dropzone';
+import { Blend } from 'lucide-react';
+
 import Heading from '@renderer/components/Heading';
+import Dropzone from '@renderer/components/Dropzone';
 import OutputImage from '@renderer/components/OutputImage';
-import { Button } from '@renderer/components/ui/button';
 import { Form, FormControl, FormField, FormItem } from '@renderer/components/ui/form';
 import { Input } from '@renderer/components/ui/input';
 import { Label } from '@renderer/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
+} from '@renderer/components/ui/select';
+import { Button } from '@renderer/components/ui/button';
+
 import useGlobalState from '@renderer/hooks/useGlobalState';
-import { createLazyFileRoute } from '@tanstack/react-router';
-import { Blend } from 'lucide-react';
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 
 const hybridSchema = z.object({
-  lowFrequencyFilterRadius: z.number(),
-  highFrequencyFilterRadius: z.number()
+  firstImage: z.enum(['low', 'high']),
+  secondImage: z.enum(['low', 'high']),
+  filterRadius: z.number()
 });
 
 function Hybrid() {
@@ -24,8 +36,9 @@ function Hybrid() {
   const form = useForm<z.infer<typeof hybridSchema>>({
     resolver: zodResolver(hybridSchema),
     defaultValues: {
-      lowFrequencyFilterRadius: 10,
-      highFrequencyFilterRadius: 10
+      firstImage: 'low',
+      secondImage: 'high',
+      filterRadius: 10
     }
   });
 
@@ -55,35 +68,82 @@ function Hybrid() {
             >
               <div className="flex flex-wrap gap-4">
                 <FormField
-                  name="lowFrequencyFilterRadius"
+                  control={form.control}
+                  name="firstImage"
                   render={({ field }) => (
                     <FormItem className="w-[220px]">
-                      <Label htmlFor="lowFrequencyFilterRadius">Low Frequency Filter Radius</Label>
-                      <FormControl className="p-2">
-                        <Input
-                          type="number"
-                          id="lowFrequencyFilterRadius"
-                          min={0}
-                          max={100}
-                          step={1}
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                        />
-                      </FormControl>
+                      <Label htmlFor="firstImageFilter">First Image Filter</Label>
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) => {
+                          if (value === 'low') {
+                            form.setValue('secondImage', 'high');
+                          } else {
+                            form.setValue('secondImage', 'low');
+                          }
+                          field.onChange(value);
+                        }}
+                      >
+                        <FormControl id="firstImageFilter">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select transformation type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Filters</SelectLabel>
+                            <SelectItem value="low">Low Pass Filter</SelectItem>
+                            <SelectItem value="high">High Pass Filter</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
                     </FormItem>
                   )}
                 />
+
                 <FormField
-                  name="highFrequencyFilterRadius"
+                  control={form.control}
+                  name="secondImage"
                   render={({ field }) => (
                     <FormItem className="w-[220px]">
-                      <Label htmlFor="highFrequencyFilterRadius">
-                        High Frequency Filter Radius
-                      </Label>
+                      <Label htmlFor="secondImageFilter">Second Image Filter</Label>
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) => {
+                          if (value === 'low') {
+                            form.setValue('firstImage', 'high');
+                          } else {
+                            form.setValue('firstImage', 'low');
+                          }
+                          field.onChange(value);
+                        }}
+                      >
+                        <FormControl id="secondImageFilter">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select transformation type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Filters</SelectLabel>
+                            <SelectItem value="low">Low Pass Filter</SelectItem>
+                            <SelectItem value="high">High Pass Filter</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  name="filterRadius"
+                  render={({ field }) => (
+                    <FormItem className="w-[220px]">
+                      <Label htmlFor="filterRadius">Filter Radius</Label>
                       <FormControl className="p-2">
                         <Input
                           type="number"
-                          id="highFrequencyFilterRadius"
+                          id="filterRadius"
                           min={0}
                           max={100}
                           step={1}
