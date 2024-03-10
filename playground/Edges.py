@@ -6,13 +6,34 @@ import numpy as np
 class EdgeDetector:
     @staticmethod
     def sobel_edge_detection(image):
-        blurred_image = cv2.GaussianBlur(image, (3, 3), 0)
-        gradient_x = cv2.Sobel(blurred_image, cv2.CV_64F, 1, 0, ksize=3)
-        gradient_y = cv2.Sobel(blurred_image, cv2.CV_64F, 0, 1, ksize=3)
-        gradient_magnitude = np.sqrt(gradient_x**2 + gradient_y**2)
-        gradient_magnitude *= 255.0 / gradient_magnitude.max()
-        gradient_magnitude = gradient_magnitude.astype(np.uint8)
-        return gradient_magnitude
+        def sobel_edge_detection(image, direction='both'):
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        G = np.zeros(gray_image.shape)
+        G_x = np.zeros(gray_image.shape)
+        G_y = np.zeros(gray_image.shape)
+        size = gray_image.shape
+        kernel_x = np.array(([-1, 0, 1], 
+                                [-2, 0, 2], 
+                                [-1, 0, 1]))
+
+        kernel_y = np.array(([-1, -2, -1], 
+                                [0, 0, 0], 
+                                [1, 2, 1]))
+        for i in range(1, size[0] - 1):
+            for j in range(1, size[1] - 1):
+                if direction == 'x' or direction == 'both':
+                    G_x[i, j] = np.sum(np.multiply(gray_image[i - 1 : i + 2, j - 1 : j + 2], kernel_x))
+                if direction == 'y' or direction == 'both':
+                    G_y[i, j] = np.sum(np.multiply(gray_image[i - 1 : i + 2, j - 1 : j + 2], kernel_y))
+        if direction == 'x':
+            G = np.abs(G_x)
+        elif direction == 'y':
+            G = np.abs(G_y)
+        elif direction == 'both':
+            G = np.sqrt(np.square(G_x) + np.square(G_y))
+        G = np.multiply(G, 255.0 / G.max())
+        G = G.astype('uint8')
+        return G
 
 
     @staticmethod
@@ -35,7 +56,7 @@ image_path = "C:/Users/mirna/Downloads/Sobel_src.JPG"
 image = cv2.imread(image_path)
 
 if image is not None:
-    image_after_sobel = EdgeDetector.sobel_edge_detection(image)
+    image_after_sobel = EdgeDetector.sobel_edge_detection(image,direction='both')
     image_after_robert = EdgeDetector.roberts_edge_detection(image)
 
     plt.subplot(1, 2, 1)
