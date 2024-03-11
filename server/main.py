@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api.endpoints import upload, filter, noise, hybrid
+from api.endpoints import upload, filter, noise, hybrid, thresholding
 from api.config import uploads_folder
 import os
 
@@ -22,3 +22,4 @@ app.include_router(upload.router)
 app.include_router(filter.router)
 app.include_router(noise.router)
 app.include_router(hybrid.router)
+app.include_router(thresholding.router)

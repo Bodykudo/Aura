@@ -29,8 +29,8 @@ import placeholder from '@renderer/assets/placeholder.png';
 
 const thresholdingSchema = z.object({
   type: z.enum(['local', 'global']).nullable(),
-  kernelSize: z.number(),
-  sigma: z.number()
+  blockSize: z.number(),
+  threshold: z.number()
 });
 
 const thresholdingOptions = [
@@ -41,30 +41,79 @@ const thresholdingOptions = [
 const inputs = [
   {
     value: 'local',
-    inputs: [{ label: 'Border Radius', name: 'kernelSize', min: 1, max: 9, step: 2 }]
+    inputs: [{ label: 'Block Size', name: 'blockSize', min: 1, max: 13, step: 2 }]
   },
   {
     value: 'global',
-    inputs: [
-      { label: 'Kernel Size', name: 'kernelSize', min: 1, max: 9, step: 2 },
-      { label: 'Sigma', name: 'sigma', min: 0, max: 10, step: 0.1 }
-    ]
+    inputs: [{ label: 'Threshold', name: 'threshold', min: 0, max: 255, step: 1 }]
   }
 ];
 
 function Thresholding() {
   const ipcRenderer = (window as any).ipcRenderer;
 
-  const { filesIds, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
+  const { filesIds, setFileId, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const form = useForm<z.infer<typeof thresholdingSchema>>({
     resolver: zodResolver(thresholdingSchema),
     defaultValues: {
-      kernelSize: 3,
-      sigma: 1
+      blockSize: 11,
+      threshold: 127
     }
   });
+
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setFileId(0, null);
+    setUploadedImageURL(0, null);
+    setProcessedImageURL(0, null);
+  }, []);
+
+  useEffect(() => {
+    const imageReceivedListener = (event: any) => {
+      if (event.data.image) {
+        setProcessedImageURL(0, event.data.image);
+      }
+      setIsProcessing(false);
+    };
+    ipcRenderer.on('image:received', imageReceivedListener);
+
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
+  }, []);
+
+  useEffect(() => {
+    const imageErrorListener = () => {
+      toast({
+        title: 'Something went wrong',
+        description: "Thresholding couldn't be applied on your image, please try again later.",
+        variant: 'destructive'
+      });
+      setIsProcessing(false);
+    };
+    ipcRenderer.on('image:error', imageErrorListener);
+
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
+  }, []);
+
+  const onSubmit = (data: z.infer<typeof thresholdingSchema>) => {
+    const body = {
+      type: data.type,
+      blockSize: data.blockSize,
+      threshold: data.threshold
+    };
+
+    setIsProcessing(true);
+    ipcRenderer.send('process:image', {
+      body,
+      url: `/api/thresholding/${filesIds[0]}`
+    });
+  };
 
   return (
     <div>
@@ -79,7 +128,7 @@ function Thresholding() {
         <div className="mb-4">
           <Form {...form}>
             <form
-              // onSubmit={form.handleSubmit(onSubmit)}
+              onSubmit={form.handleSubmit(onSubmit)}
               className="flex flex-wrap gap-4 justify-between items-end"
             >
               <div className="flex flex-wrap gap-2">
@@ -92,7 +141,7 @@ function Thresholding() {
                       <Select disabled={isProcessing} onValueChange={field.onChange}>
                         <FormControl id="thresholdingType">
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a filter" />
+                            <SelectValue placeholder="Select thresholding type" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -115,10 +164,10 @@ function Thresholding() {
                   {inputs.find((input) => input.value === form.watch('type')) &&
                     inputs
                       .find((input) => input.value === form.watch('type'))
-                      ?.inputs.map((input, index) => {
+                      ?.inputs.map((input) => {
                         return (
                           <FormField
-                            key={index}
+                            key={input.name}
                             name={input.name}
                             render={({ field }) => (
                               <FormItem className="w-[150px]">
@@ -143,7 +192,7 @@ function Thresholding() {
                 </div>
               </div>
               <Button disabled={!filesIds[0] || isProcessing} type="submit">
-                Apply Filter
+                Apply Thresholding
               </Button>
             </form>
           </Form>
