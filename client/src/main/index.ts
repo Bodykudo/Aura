@@ -59,10 +59,10 @@ ipcMain.on('upload:data', async (event, args) => {
   if (args.file) {
     try {
       const data = await handleUploadImage(args.file);
-      event.reply('upload:done', { data: data });
+      event.reply('upload:done', { index: args.index, data: data });
       return true;
     } catch (error) {
-      event.reply('upload:error');
+      event.reply('upload:error', { index: args.index });
     }
   }
   return false;

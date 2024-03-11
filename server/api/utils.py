@@ -37,6 +37,7 @@ def get_image(image_id):
 
 
 def convert_image(output_image):
+    output_image = np.clip(output_image, 0, 255).astype(np.uint8)
     is_success, buffer = cv2.imencode(
         ".jpg", cv2.cvtColor(output_image, cv2.COLOR_RGB2BGR)
     )
@@ -95,8 +96,8 @@ def convolve(image, kernel):
 
     return np.clip(result, 0, 255).astype(np.uint8)
 
-def compute_fft(image):
-        f_transform = np.fft.fft2(image)
-        f_transform_shifted = np.fft.fftshift(f_transform)
-        return f_transform_shifted
 
+def compute_fft(image):
+    f_transform = np.fft.fft2(image)
+    f_transform_shifted = np.fft.fftshift(f_transform)
+    return f_transform_shifted

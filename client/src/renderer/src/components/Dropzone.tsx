@@ -43,33 +43,37 @@ export default function Dropzone({ index }: DropzoneProps) {
 
   useEffect(() => {
     ipcRenderer.on('upload:done', (event: any) => {
-      setIsUploading(false);
-      if (event.data.fileId) {
-        toast({
-          title: 'Image uploaded',
-          description: 'Your image has been uploaded successfully.'
-        });
-        setFileId(index, event.data.fileId);
+      if (event.index === index) {
+        setIsUploading(false);
+        if (event.data.fileId) {
+          toast({
+            title: 'Image uploaded',
+            description: 'Your image has been uploaded successfully.'
+          });
+          setFileId(index, event.data.fileId);
+        }
+        if (progressInterval) {
+          clearInterval(progressInterval);
+        }
+        setIsUploading(false);
+        setIsUploaded(true);
+        setProgressInterval(null);
       }
-      if (progressInterval) {
-        clearInterval(progressInterval);
-      }
-      setIsUploading(false);
-      setIsUploaded(true);
-      setProgressInterval(null);
     });
 
-    ipcRenderer.on('upload:error', () => {
-      toast({
-        title: 'Something went wrong',
-        description: "Your image couldn't be uploaded, please try again later.",
-        variant: 'destructive'
-      });
-      setIsUploading(false);
-      if (progressInterval) {
-        clearInterval(progressInterval);
+    ipcRenderer.on('upload:error', (event: any) => {
+      if (event.index === index) {
+        toast({
+          title: 'Something went wrong',
+          description: "Your image couldn't be uploaded, please try again later.",
+          variant: 'destructive'
+        });
+        setIsUploading(false);
+        if (progressInterval) {
+          clearInterval(progressInterval);
+        }
+        setProgressInterval(null);
       }
-      setProgressInterval(null);
     });
   }, [progressInterval]);
 
@@ -141,7 +145,7 @@ export default function Dropzone({ index }: DropzoneProps) {
 
   const handleUpload = () => {
     setIsUploading(true);
-    ipcRenderer.send('upload:data', { file: currentFilePath });
+    ipcRenderer.send('upload:data', { index, file: currentFilePath });
     setProgressInterval(startSimulateProgress());
   };
 

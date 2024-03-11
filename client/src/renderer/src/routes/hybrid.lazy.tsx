@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -23,6 +23,7 @@ import {
 import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
+import { useToast } from '@renderer/components/ui/use-toast';
 
 const hybridSchema = z.object({
   firstImage: z.enum(['low', 'high']),
@@ -31,7 +32,10 @@ const hybridSchema = z.object({
 });
 
 function Hybrid() {
-  const { setUploadedImageURL, setProcessedImageURL } = useGlobalState();
+  const ipcRenderer = (window as any).ipcRenderer;
+
+  const { filesIds, setFileId, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const form = useForm<z.infer<typeof hybridSchema>>({
     resolver: zodResolver(hybridSchema),
@@ -42,13 +46,71 @@ function Hybrid() {
     }
   });
 
+  const { toast } = useToast();
+
   useEffect(() => {
+    setFileId(0, null);
+    setFileId(1, null);
     setUploadedImageURL(0, null);
     setUploadedImageURL(1, null);
     setProcessedImageURL(0, null);
     setProcessedImageURL(1, null);
     setProcessedImageURL(2, null);
   }, []);
+
+  useEffect(() => {
+    const imageReceivedListener = (event: any) => {
+      if (event.data.filteredImage1) {
+        setProcessedImageURL(0, event.data.filteredImage1);
+      }
+
+      if (event.data.filteredImage2) {
+        setProcessedImageURL(1, event.data.filteredImage2);
+      }
+
+      if (event.data.hybridImage) {
+        setProcessedImageURL(2, event.data.hybridImage);
+      }
+      setIsProcessing(false);
+    };
+    ipcRenderer.on('image:received', imageReceivedListener);
+
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
+  }, []);
+
+  useEffect(() => {
+    const imageErrorListener = () => {
+      toast({
+        title: 'Something went wrong',
+        description: "Your image couldn't be filtered, please try again later.",
+        variant: 'destructive'
+      });
+      setIsProcessing(false);
+    };
+    ipcRenderer.on('image:error', imageErrorListener);
+
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
+  }, []);
+
+  const onSubmit = (data: z.infer<typeof hybridSchema>) => {
+    const body = {
+      firstImageId: filesIds[0],
+      secondImageId: filesIds[1],
+      firstFilterType: data.firstImage,
+      secondFilterType: data.secondImage,
+      filterRadius: data.filterRadius
+    };
+
+    setIsProcessing(true);
+    ipcRenderer.send('process:image', {
+      body,
+      url: `/api/hybrid`
+    });
+  };
 
   return (
     <div>
@@ -63,7 +125,7 @@ function Hybrid() {
         <div className="mb-4">
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit((values) => console.log(values))}
+              onSubmit={form.handleSubmit(onSubmit)}
               className="flex flex-wrap gap-4 justify-between items-end"
             >
               <div className="flex flex-wrap gap-4">
