@@ -107,7 +107,7 @@ function Filters() {
     return () => {
       ipcRenderer.removeAllListeners();
     };
-  });
+  }, []);
 
   const onSubmit = (data: z.infer<typeof filtersSchema>) => {
     const body = {
