@@ -5,3 +5,4 @@ class FilterModel(BaseModel):
     type: str
     kernelSize: int
     sigma: float
+    radius: int

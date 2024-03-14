@@ -28,15 +28,18 @@ import { useToast } from '@renderer/components/ui/use-toast';
 import placeholder from '@renderer/assets/placeholder.png';
 
 const filtersSchema = z.object({
-  type: z.enum(['average', 'gaussian', 'median']).nullable(),
+  type: z.enum(['average', 'gaussian', 'median', 'low', 'high']).nullable(),
   kernelSize: z.number(),
-  sigma: z.number()
+  sigma: z.number(),
+  radius: z.number()
 });
 
 const filtersOptions = [
   { label: 'Average Filter', value: 'average' },
   { label: 'Gaussian Filter', value: 'gaussian' },
-  { label: 'Median Filter', value: 'median' }
+  { label: 'Median Filter', value: 'median' },
+  { label: 'Low Pass Filter', value: 'low' },
+  { label: 'High Pass Filter', value: 'high' }
 ];
 
 const inputs = [
@@ -54,6 +57,30 @@ const inputs = [
   {
     value: 'median',
     inputs: [{ label: 'Kernel Size', name: 'kernelSize', min: 1, max: 9, step: 2 }]
+  },
+  {
+    value: 'low',
+    inputs: [
+      {
+        label: 'Filter Radius',
+        name: 'radius',
+        min: 1,
+        max: 100,
+        step: 1
+      }
+    ]
+  },
+  {
+    value: 'high',
+    inputs: [
+      {
+        label: 'Filter Radius',
+        name: 'radius',
+        min: 1,
+        max: 100,
+        step: 1
+      }
+    ]
   }
 ];
 
@@ -67,7 +94,8 @@ function Filters() {
     resolver: zodResolver(filtersSchema),
     defaultValues: {
       kernelSize: 3,
-      sigma: 1
+      sigma: 1,
+      radius: 20
     }
   });
 
@@ -113,7 +141,8 @@ function Filters() {
     const body = {
       type: data.type,
       kernelSize: data.kernelSize,
-      sigma: data.sigma
+      sigma: data.sigma,
+      radius: data.radius
     };
 
     setIsProcessing(true);
