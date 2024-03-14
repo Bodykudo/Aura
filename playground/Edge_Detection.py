@@ -147,9 +147,9 @@ class Edge_Detection:
         return image_prewitt_x, image_prewitt_y
     
     def Prewitt_Gradient(self, G_x, G_y):
-        # G = np.sqrt(G_x**2 + G_y**2)
         G = G_x + G_y
-        G = (G / np.max(G)) * 255 # This line normalizes the values in the array to a range between 0 and 255.
+        # G = np.sqrt(np.square(G_x) + np.square(G_y))
+        G = np.multiply(G, 255.0 / G.max())
         G = np.clip(G, 0, 255).astype(np.uint8) # This line ensures that all values in the image_prewitt array are within the valid range of 8-bit unsigned integers (0 to 255).
         return G
     
@@ -161,9 +161,9 @@ if __name__ == "__main__":
     Kilua = cv2.imread('.\playground\image1.jpg')
     Jane = cv2.imread('.\playground\image2.jpg')
     
-    cat_with_canny = Edge.Canny(Cat, 0, 50)
-    kilua_with_canny = Edge.Canny(Kilua, 0, 50)
-    jane_with_canny = Edge.Canny(Jane, 0, 30)
+    # cat_with_canny = Edge.Canny(Cat, 0, 50)
+    kilua_with_canny, angels = Edge.sobel_filter(Kilua)
+    # jane_with_canny = Edge.Canny(Jane, 0, 30)
     
     kilua_with_prewitt_x, kilua_with_prewitt_y= Edge.Prewitt(Kilua)
 
@@ -205,8 +205,8 @@ if __name__ == "__main__":
     cv2.imshow('kilua_with_prewitt', kilua_with_prewitt)
     cv2.imshow('kilua_with_prewitt_x', kilua_with_prewitt_x)
     cv2.imshow('kilua_with_prewitt_y', kilua_with_prewitt_y)
-    cv2.imshow('jane_with_canny', jane_with_canny)
+    # cv2.imshow('jane_with_canny', jane_with_canny)
     cv2.imshow('kilua_with_canny', kilua_with_canny)
-    cv2.imshow('cat_with_canny', cat_with_canny)
+    # cv2.imshow('cat_with_canny', cat_with_canny)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

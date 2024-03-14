@@ -5,8 +5,7 @@ import numpy as np
 
 class EdgeDetector:
     @staticmethod
-    def sobel_edge_detection(image):
-        def sobel_edge_detection(image, direction='both'):
+    def sobel_edge_detection(image, direction='both'):
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         G = np.zeros(gray_image.shape)
         G_x = np.zeros(gray_image.shape)
@@ -52,7 +51,7 @@ class EdgeDetector:
     
     
 # test for edge detection 
-image_path = "C:/Users/mirna/Downloads/Sobel_src.JPG"
+image_path = ".\playground\image1.jpg"
 image = cv2.imread(image_path)
 
 if image is not None:
