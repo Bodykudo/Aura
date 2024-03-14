@@ -32,9 +32,9 @@ class EdgeDetector:
 
         
     @staticmethod
-    def prewitt_edge_detection(image):
+    def prewitt_edge_detection(image,gaussian_ksize):
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-       
+        gray_image = cv2.GaussianBlur(gray_image, (gaussian_ksize, gaussian_ksize), 0)
         prewitt_kernel_x = np.array([[1, 0, -1],
                                      [1, 0, -1],
                                      [1, 0, -1]])
@@ -51,8 +51,9 @@ class EdgeDetector:
 
 
     @staticmethod
-    def roberts_edge_detection(image):
+    def roberts_edge_detection(image,gaussian_ksize):
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        gray_image = cv2.GaussianBlur(gray_image, (gaussian_ksize, gaussian_ksize), 0)
         roberts_kernel_x = np.array([[1, 0],
                                       [0, -1]])
         roberts_kernel_y = np.array([[0, 1],
@@ -65,31 +66,31 @@ class EdgeDetector:
     
 
     @staticmethod
-    def canny_edge_detection(image, gaussian_ksize, low_threshold, high_threshold):
+    def canny_edge_detection(image, gaussian_ksize,  sigma,low_threshold, high_threshold):
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        blurred_image = cv2.GaussianBlur(gray_image, (gaussian_ksize, gaussian_ksize), 0)
+        blurred_image = cv2.GaussianBlur(gray_image, (gaussian_ksize, gaussian_ksize), sigma)
         edges = cv2.Canny(blurred_image, low_threshold, high_threshold)
         return edges
     
     
     
 # test for edge detection 
-image_path = "C:/Users/mirna/Downloads/test.PNG"
+image_path = "C:/Users/mirna/Downloads/lena.BMP"
 image = cv2.imread(image_path)
 
 if image is not None:
     image_after_sobel = EdgeDetector.sobel_edge_detection(image,3,direction='both')
-    image_after_robert = EdgeDetector.roberts_edge_detection(image)
-    image_after_canny=EdgeDetector.canny_edge_detection(image, gaussian_ksize=5, low_threshold=10, high_threshold=50)
-    image_after_prewitt=EdgeDetector.prewitt_edge_detection(image)
+    image_after_robert = EdgeDetector.roberts_edge_detection(image,3)
+    image_after_canny=EdgeDetector.canny_edge_detection(image, gaussian_ksize=5, sigma=0,low_threshold=10, high_threshold=50)
+    image_after_prewitt=EdgeDetector.prewitt_edge_detection(image,3)
 
     plt.subplot(1, 2, 1)
     plt.imshow(image_after_prewitt, cmap='gray')
     plt.title('image_after_prewitt')
 
     plt.subplot(1, 2, 2)
-    plt.imshow(image_after_sobel, cmap='gray')
-    plt.title('image_after_sobel')
+    plt.imshow(image_after_canny, cmap='gray')
+    plt.title('image_after_canny')
 
 
     plt.tight_layout()
