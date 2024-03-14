@@ -17,7 +17,8 @@ class Hybrid:
             center_h - radius : center_h + radius + 1,
         ] = 1
         masked_fft_img = fft_image * filter_mask
-        return masked_fft_img
+        filtered_image = np.abs(np.fft.ifft2(np.fft.ifftshift(masked_fft_img)))
+        return masked_fft_img, filtered_image
 
     @staticmethod
     def apply_high_pass(image_path, radius):
@@ -31,20 +32,17 @@ class Hybrid:
             center_h - radius : center_h + radius + 1,
         ] = 0
         masked_fft_image = fft_image * filter_mask
-        return masked_fft_image
+        filtered_image = np.abs(np.fft.ifft2(np.fft.ifftshift(masked_fft_image)))
+        return masked_fft_image, filtered_image
 
     @staticmethod
     def apply_mixer(img_1_path, img_2_path, filter_1, radius):
         if filter_1 == "High Pass Filter":
-            fft_img1 = Hybrid.apply_high_pass(img_1_path, radius)
-            output_img1 = np.abs(np.fft.ifft2(np.fft.ifftshift(fft_img1)))
-            fft_img2 = Hybrid.apply_low_pass(img_2_path, radius)
-            output_img2 = np.abs(np.fft.ifft2(np.fft.ifftshift(fft_img2)))
+            fft_img1, output_img1 = Hybrid.apply_high_pass(img_1_path, radius)
+            fft_img2, output_img2 = Hybrid.apply_low_pass(img_2_path, radius)
         else:
-            fft_img2 = Hybrid.apply_high_pass(img_2_path, radius)
-            output_img2 = np.abs(np.fft.ifft2(np.fft.ifftshift(fft_img2)))
-            fft_img1 = Hybrid.apply_low_pass(img_1_path, radius)
-            output_img1 = np.abs(np.fft.ifft2(np.fft.ifftshift(fft_img1)))
+            fft_img2, output_img2 = Hybrid.apply_high_pass(img_2_path, radius)
+            fft_img1, output_img1 = Hybrid.apply_low_pass(img_1_path, radius)
 
         mixed_img = fft_img1 + fft_img2
         output_mixed_img = np.abs(np.fft.ifft2(np.fft.ifftshift(mixed_img)))
