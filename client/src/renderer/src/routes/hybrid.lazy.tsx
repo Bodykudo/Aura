@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -34,8 +34,14 @@ const hybridSchema = z.object({
 function Hybrid() {
   const ipcRenderer = (window as any).ipcRenderer;
 
-  const { filesIds, setFileId, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const {
+    filesIds,
+    setFileId,
+    setUploadedImageURL,
+    setProcessedImageURL,
+    isProcessing,
+    setIsProcessing
+  } = useGlobalState();
 
   const form = useForm<z.infer<typeof hybridSchema>>({
     resolver: zodResolver(hybridSchema),
@@ -49,6 +55,7 @@ function Hybrid() {
   const { toast } = useToast();
 
   useEffect(() => {
+    setIsProcessing(false);
     setFileId(0, null);
     setFileId(1, null);
     setUploadedImageURL(0, null);
@@ -137,6 +144,7 @@ function Hybrid() {
                       <Label htmlFor="firstImageFilter">First Image Filter</Label>
                       <Select
                         value={field.value}
+                        disabled={isProcessing}
                         onValueChange={(value) => {
                           if (value === 'low') {
                             form.setValue('secondImage', 'high');
@@ -171,6 +179,7 @@ function Hybrid() {
                       <Label htmlFor="secondImageFilter">Second Image Filter</Label>
                       <Select
                         value={field.value}
+                        disabled={isProcessing}
                         onValueChange={(value) => {
                           if (value === 'low') {
                             form.setValue('firstImage', 'high');
@@ -205,6 +214,7 @@ function Hybrid() {
                       <FormControl className="p-2">
                         <Input
                           type="number"
+                          disabled={isProcessing}
                           id="filterRadius"
                           min={0}
                           max={100}
@@ -217,7 +227,9 @@ function Hybrid() {
                   )}
                 />
               </div>
-              <Button type="submit">Mix Images</Button>
+              <Button disabled={!filesIds[0] || isProcessing} type="submit">
+                Mix Images
+              </Button>
             </form>
           </Form>
         </div>

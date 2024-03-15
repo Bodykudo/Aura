@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from api.utils import convert_image, get_image
+from api.utils import convert_image, get_image, read_image
 from api.config import uploads_folder
 from api.schemas.filter_model import FilterModel
 from api.services.filter_service import Filter
@@ -30,9 +30,11 @@ async def apply_filter(image_id: str, filter: FilterModel):
     elif filter.type == "median":
         filtered_image = Filter.median_filter(image_path, filter.kernelSize)
     elif filter.type == "low":
-        _, filtered_image = Hybrid.apply_low_pass(image_path, filter.radius)
+        image = read_image(image_path, grayscale=True)
+        _, filtered_image = Hybrid.apply_low_pass(image, filter.radius)
     elif filter.type == "high":
-        _, filtered_image = Hybrid.apply_high_pass(image_path, filter.radius)
+        image = read_image(image_path, grayscale=True)
+        _, filtered_image = Hybrid.apply_high_pass(image, filter.radius)
 
     filtered_image = convert_image(filtered_image)
 

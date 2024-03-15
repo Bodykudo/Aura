@@ -7,6 +7,8 @@ interface IUseGlobalState {
   setUploadedImageURL: (index: number, imageURL: string | null) => void;
   processedImagesURLs: string[] | null[];
   setProcessedImageURL: (index: number, imageURL: string | null) => void;
+  isProcessing: boolean;
+  setIsProcessing: (isProcessing: boolean) => void;
 }
 
 const useGlobalState = create<IUseGlobalState>((set) => ({
@@ -22,7 +24,9 @@ const useGlobalState = create<IUseGlobalState>((set) => ({
   setProcessedImageURL: (index, imageURL) =>
     set((state) => ({
       processedImagesURLs: state.processedImagesURLs.map((url, i) => (i === index ? imageURL : url))
-    }))
+    })),
+  isProcessing: false,
+  setIsProcessing: (isProcessing) => set({ isProcessing })
 }));
 
 export default useGlobalState;

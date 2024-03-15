@@ -1,9 +1,10 @@
 import useGlobalState from '@renderer/hooks/useGlobalState';
-import { Cloud, File, Loader2, Upload } from 'lucide-react';
+import { Cloud, File } from 'lucide-react';
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { useToast } from './ui/use-toast';
+import { cn } from '@renderer/lib/utils';
 
 interface DropzoneProps {
   index: number;
@@ -16,12 +17,11 @@ export default function Dropzone({ index }: DropzoneProps) {
 
   const [progressInterval, setProgressInterval] = useState<NodeJS.Timeout | null>(null);
   const [progressValue, setProgressValue] = useState(0);
-  const [currentFilePath, setCurrentFilePath] = useState<string | null>(null);
 
   const { toast } = useToast();
   const dropArea = useRef<HTMLLabelElement>(null);
 
-  const { uploadedImagesURLs, setUploadedImageURL, setFileId, setProcessedImageURL } =
+  const { uploadedImagesURLs, setUploadedImageURL, setFileId, setProcessedImageURL, isProcessing } =
     useGlobalState();
 
   const ipcRenderer = (window as any).ipcRenderer;
@@ -107,14 +107,19 @@ export default function Dropzone({ index }: DropzoneProps) {
   };
 
   const handleDrop = (e: DragEvent) => {
+    if (isProcessing) return;
+
     e.preventDefault();
     e.stopPropagation();
     setIsHover(false);
     if (e.dataTransfer) {
       const { files } = e.dataTransfer;
       if (files.length > 1) {
-        console.log('You can only upload 1 file.');
-        return;
+        return toast({
+          title: 'Too many files',
+          description: 'You can only upload 1 file.',
+          variant: 'destructive'
+        });
       }
 
       if (
@@ -122,31 +127,32 @@ export default function Dropzone({ index }: DropzoneProps) {
         files[0].type !== 'image/jpg' &&
         files[0].type !== 'image/jpeg'
       ) {
-        console.log('Unsupported file, please upload only PNG, JPG, or JPEG files.');
-        return;
+        return toast({
+          title: 'Unsupported file',
+          description: 'Please upload only PNG, JPG, or JPEG files.',
+          variant: 'destructive'
+        });
       }
 
       const file = files[0];
-      setCurrentFilePath(file.path);
       const url = URL.createObjectURL(file);
       setUploadedImageURL(index, url);
+      setIsUploading(true);
+      ipcRenderer.send('upload:data', { index, file: file.path });
+      return setProgressInterval(startSimulateProgress());
     }
   };
 
-  const handleChangeImage = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleChangeImage = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
       const file = files[0];
-      setCurrentFilePath(file.path);
       const url = URL.createObjectURL(file);
       setUploadedImageURL(index, url);
+      setIsUploading(true);
+      setProgressInterval(startSimulateProgress());
+      ipcRenderer.send('upload:data', { index, file: file.path });
     }
-  };
-
-  const handleUpload = () => {
-    setIsUploading(true);
-    ipcRenderer.send('upload:data', { index, file: currentFilePath });
-    setProgressInterval(startSimulateProgress());
   };
 
   return (
@@ -154,9 +160,15 @@ export default function Dropzone({ index }: DropzoneProps) {
       <label
         ref={dropArea}
         htmlFor="poster"
-        className={`relative hover:bg-gray-300 dark:hover:bg-gray-700 transition-all duration-300 h-72 lg:h-80 xl:h-96 rounded-md shadow-sm border-2 border-dashed cursor-pointer flex items-center justify-center  border-gray-400 dark:border-gray-600 outline-none ${
-          isHover ? 'bg-gray-300 dark:bg-gray-700' : 'bg-gray-300/70 dark:bg-gray-700/70'
-        }`}
+        className={cn(
+          'relative transition-all duration-300 h-72 lg:h-80 xl:h-96 rounded-md shadow-sm border-2 border-dashed flex items-center justify-center  border-gray-400 dark:border-gray-600 outline-none',
+          !isUploading &&
+            !isProcessing &&
+            'cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-700',
+          isHover && !isUploading && !isProcessing
+            ? 'bg-gray-300 dark:bg-gray-700'
+            : 'bg-gray-300/70 dark:bg-gray-700/70'
+        )}
       >
         <input
           id="file"
@@ -164,7 +176,11 @@ export default function Dropzone({ index }: DropzoneProps) {
           name="file"
           accept="image/*"
           onChange={handleChangeImage}
-          className="absolute z-30 cursor-pointer opacity-0 w-full h-full"
+          disabled={isUploading || isProcessing}
+          className={cn(
+            'absolute z-30 opacity-0 w-full h-full',
+            isUploading || isProcessing ? 'cursor-not-allowed' : 'cursor-pointer'
+          )}
         />
         {uploadedImagesURLs[index] && (
           <img src={uploadedImagesURLs[index] ?? ''} className="h-full p-2" alt="uploaded image" />
@@ -196,33 +212,14 @@ export default function Dropzone({ index }: DropzoneProps) {
           </div>
         )}
       </label>
-      {!isUploaded && (
-        <div className="flex flex-col justify-between gap-4 md:flex-row items-center">
-          <Button
-            disabled={!uploadedImagesURLs[index] || isUploading}
-            onClick={handleUpload}
-            className="w-[200px]"
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Uploading
-              </>
-            ) : (
-              <>
-                <Upload className="h-4 w-4 mr-1.5" /> Upload
-              </>
-            )}
-          </Button>
-          {isUploading && <Progress className="max-w-[250px] h-2" value={progressValue} />}
-        </div>
-      )}
+      {isUploading && <Progress className="max-w-[250px] h-2" value={progressValue} />}
       {isUploaded && (
         <Button
           className="w-[200px]"
+          disabled={isProcessing}
           onClick={() => {
             setIsUploaded(false);
             setUploadedImageURL(index, null);
-            setCurrentFilePath(null);
             setFileId(index, null);
             setProcessedImageURL(index, null);
           }}

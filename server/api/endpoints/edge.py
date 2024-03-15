@@ -7,7 +7,7 @@ from api.services.edge_service import EdgeDetector
 router = APIRouter()
 
 edge_detector = ["sobel", "roberts", "prewitt", "canny"]
-sobel_detector_directions = ["horizontal", "vertical", "combined"]
+sobel_detector_directions = ["x", "y", "both"]
 
 
 @router.post("/api/edge/{image_id}")

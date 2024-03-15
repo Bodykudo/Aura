@@ -37,8 +37,10 @@ class EdgeDetector:
             return sobelx_norm
         elif direction == "y":
             return sobely_norm
-        else:
+        elif direction == "both":
             return sobel_magnitude
+        else:
+            raise ValueError("Invalid direction. Please use x, y or both.")
 
     @staticmethod
     def prewitt_edge_detection(image, gaussian_ksize):

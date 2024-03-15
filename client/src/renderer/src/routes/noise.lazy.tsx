@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -64,8 +64,14 @@ const inputs = [
 function Noise() {
   const ipcRenderer = (window as any).ipcRenderer;
 
-  const { filesIds, setFileId, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const {
+    filesIds,
+    setFileId,
+    setUploadedImageURL,
+    setProcessedImageURL,
+    isProcessing,
+    setIsProcessing
+  } = useGlobalState();
 
   const form = useForm<z.infer<typeof noiseSchema>>({
     resolver: zodResolver(noiseSchema),
@@ -81,6 +87,7 @@ function Noise() {
   const { toast } = useToast();
 
   useEffect(() => {
+    setIsProcessing(false);
     setFileId(0, null);
     setUploadedImageURL(0, null);
     setProcessedImageURL(0, null);

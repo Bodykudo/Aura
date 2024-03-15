@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -52,8 +52,14 @@ const inputs = [
 function Thresholding() {
   const ipcRenderer = (window as any).ipcRenderer;
 
-  const { filesIds, setFileId, setUploadedImageURL, setProcessedImageURL } = useGlobalState();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const {
+    filesIds,
+    setFileId,
+    setUploadedImageURL,
+    setProcessedImageURL,
+    isProcessing,
+    setIsProcessing
+  } = useGlobalState();
 
   const form = useForm<z.infer<typeof thresholdingSchema>>({
     resolver: zodResolver(thresholdingSchema),
@@ -66,6 +72,7 @@ function Thresholding() {
   const { toast } = useToast();
 
   useEffect(() => {
+    setIsProcessing(false);
     setFileId(0, null);
     setUploadedImageURL(0, null);
     setProcessedImageURL(0, null);

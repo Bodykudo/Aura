@@ -25,6 +25,7 @@ import useGlobalState from '@renderer/hooks/useGlobalState';
 import { ScanIcon } from 'lucide-react';
 
 import placeholder from '@renderer/assets/placeholder2.png';
+import { useToast } from '@renderer/components/ui/use-toast';
 
 const noiseSchema = z.object({
   type: z.enum(['sobel', 'roberts', 'prewitt', 'canny']).nullable(),
@@ -81,8 +82,14 @@ const inputs = [
 
 function Edge() {
   const ipcRenderer = (window as any).ipcRenderer;
-  const { setUploadedImageURL, setProcessedImageURL } = useGlobalState();
-  // const downloadRef = useRef<HTMLAnchorElement | null>(null);
+  const {
+    filesIds,
+    setFileId,
+    setUploadedImageURL,
+    setProcessedImageURL,
+    isProcessing,
+    setIsProcessing
+  } = useGlobalState();
 
   const form = useForm<z.infer<typeof noiseSchema>>({
     resolver: zodResolver(noiseSchema),
@@ -95,42 +102,64 @@ function Edge() {
     }
   });
 
+  const { toast } = useToast();
+
   useEffect(() => {
+    setIsProcessing(false);
+    setFileId(0, null);
     setUploadedImageURL(0, null);
     setProcessedImageURL(0, null);
   }, []);
 
   useEffect(() => {
-    // ipcRenderer.on('upload:done', (event: any) => {
-    //   console.log(event);
-    //   if (event?.data) {
-    //     console.log(event.data);
-    //   }
-    // });
-    ipcRenderer.on('image:received', (event: any) => {
-      console.log(event);
-      console.log(event);
-      setProcessedImageURL(0, event);
-    });
+    const imageReceivedListener = (event: any) => {
+      if (event.data.image) {
+        setProcessedImageURL(0, event.data.image);
+      }
+      setIsProcessing(false);
+    };
+    ipcRenderer.on('image:received', imageReceivedListener);
+
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
   }, []);
 
-  // const handleClick = () => {
-  //   console.log('clicked');
-  //   ipcRenderer.send('get:image');
-  // };
+  useEffect(() => {
+    const imageErrorListener = () => {
+      toast({
+        title: 'Something went wrong',
+        description: "Your image couldn't be processed, please try again.",
+        variant: 'destructive'
+      });
+      setIsProcessing(false);
+    };
+    ipcRenderer.on('image:error', imageErrorListener);
 
-  // const handleDownloadClick = () => {
-  // if (processedImagesURLs && downloadRef.current) {
-  //     downloadRef.current.click();
-  //   }
-  // };
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
+  }, []);
 
   const onSubmit = (data: z.infer<typeof noiseSchema>) => {
     if (data.type === 'sobel' && !data.direction) {
       return;
     }
-    console.log(data);
-    // ipcRenderer.send('process:image', data);
+
+    const body = {
+      detector: data.type,
+      direction: data.direction,
+      kernelSize: data.kernelSize,
+      sigma: data.kernelSize,
+      lowerThreshold: data.lowerThreshold,
+      upperThreshold: data.upperThreshold
+    };
+
+    setIsProcessing(true);
+    ipcRenderer.send('process:image', {
+      body,
+      url: `/api/edge/${filesIds[0]}`
+    });
   };
 
   return (
@@ -156,7 +185,7 @@ function Edge() {
                   render={({ field }) => (
                     <FormItem className="w-[250px] mr-4">
                       <Label htmlFor="noiseType">Edge Detector</Label>
-                      <Select onValueChange={field.onChange}>
+                      <Select disabled={isProcessing} onValueChange={field.onChange}>
                         <FormControl id="noiseType">
                           <SelectTrigger>
                             <SelectValue placeholder="Select detector algorithm" />
@@ -191,7 +220,11 @@ function Edge() {
                               render={({ field }) => (
                                 <FormItem className="w-[200px]">
                                   <Label htmlFor={input.name}>{input.label}</Label>
-                                  <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                                  <Select
+                                    disabled={isProcessing}
+                                    value={field.value ?? ''}
+                                    onValueChange={field.onChange}
+                                  >
                                     <FormControl id={input.name}>
                                       <SelectTrigger>
                                         <SelectValue placeholder={input.placeholder} />
@@ -224,6 +257,7 @@ function Edge() {
                                   <FormControl className="p-2">
                                     <Input
                                       type="number"
+                                      disabled={isProcessing}
                                       id={input.name}
                                       min={input.min}
                                       max={input.max}
@@ -240,7 +274,9 @@ function Edge() {
                       })}
                 </div>
               </div>
-              <Button type="submit">Apply Filter</Button>
+              <Button disabled={!filesIds[0] || isProcessing} type="submit">
+                Detect Edges
+              </Button>
             </form>
           </Form>
         </div>
