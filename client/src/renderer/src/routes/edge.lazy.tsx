@@ -27,7 +27,7 @@ import { ScanIcon } from 'lucide-react';
 import placeholder from '@renderer/assets/placeholder2.png';
 
 const noiseSchema = z.object({
-  type: z.enum(['sobel', 'roberts', 'perwitt', 'canny']).nullable(),
+  type: z.enum(['sobel', 'roberts', 'prewitt', 'canny']).nullable(),
   direction: z.enum(['x', 'y', 'both']).nullable(),
   kernelSize: z.number(),
   sigma: z.number(),
@@ -38,7 +38,7 @@ const noiseSchema = z.object({
 const typesOptions = [
   { label: 'Sobel Detector', value: 'sobel' },
   { label: 'Roberts Detector', value: 'roberts' },
-  { label: 'Perwitt Detector', value: 'perwitt' },
+  { label: 'Prewitt Detector', value: 'prewitt' },
   { label: 'Canny Detector', value: 'canny' }
 ];
 
@@ -65,7 +65,7 @@ const inputs = [
     inputs: [{ label: 'Kernel Size', name: 'kernelSize', min: 1, max: 9, step: 2 }]
   },
   {
-    value: 'perwitt',
+    value: 'prewitt',
     inputs: [{ label: 'Kernel Size', name: 'kernelSize', min: 1, max: 9, step: 2 }]
   },
   {

@@ -14,7 +14,7 @@ filter_types = ["average", "gaussian", "median", "low", "high"]
 
 
 @router.post("/api/filter/{image_id}")
-async def applyFilter(image_id: str, filter: FilterModel):
+async def apply_filter(image_id: str, filter: FilterModel):
     if filter.type not in filter_types:
         raise HTTPException(status_code=400, detail="Filter type doesn't exist.")
 
