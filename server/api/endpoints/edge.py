@@ -6,22 +6,22 @@ from api.services.edge_service import EdgeDetector
 
 router = APIRouter()
 
-edge_types = ["sobel", "roberts", "prewitt", "canny"]
-sobel_directions = ["horizontal", "vertical", "combined"]
+edge_detector = ["sobel", "roberts", "prewitt", "canny"]
+sobel_detector_directions = ["horizontal", "vertical", "combined"]
 
 
 @router.post("/api/edge/{image_id}")
 async def apply_edge(image_id: str, edge: edgeModel):
-    if edge.type not in edge_types:
-        raise HTTPException(status_code=400, detail="Edge type doesn't exist.")
+    if edge.detector not in edge_detector:
+        raise HTTPException(status_code=400, detail="Edge detector doesn't exist.")
 
     image_path = get_image(image_id)
     image = read_image(image_path)
 
     output_image = None
 
-    if edge.type == "sobel":
-        if edge.direction not in sobel_directions:
+    if edge.detector == "sobel":
+        if edge.direction not in sobel_detector_directions:
             raise HTTPException(
                 status_code=400, detail="Direction of edge doesn't exist."
             )
@@ -31,11 +31,11 @@ async def apply_edge(image_id: str, edge: edgeModel):
                 edge.kernelSize,
                 edge.direction,
             )
-    elif edge.type == "roberts":
+    elif edge.detector == "roberts":
         output_image = EdgeDetector.roberts_edge_detection(image, edge.kernelSize)
-    elif edge.type == "prewitt":
+    elif edge.detector == "prewitt":
         output_image = EdgeDetector.prewitt_edge_detection(image, edge.kernelSize)
-    elif edge.type == "canny":
+    elif edge.detector == "canny":
         output_image = EdgeDetector.canny_edge_detection(
             image,
             edge.kernelSize,
@@ -49,6 +49,6 @@ async def apply_edge(image_id: str, edge: edgeModel):
     return {
         "success": True,
         "message": "Edge applied successfully.",
-        "type": edge.type,
+        "type": edge.detector,
         "image": output_image,
     }

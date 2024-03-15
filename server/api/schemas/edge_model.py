@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class edgeModel(BaseModel):
-    type: str
+    detector: str
     direction: str
     kernelSize: int
     sigma: float
