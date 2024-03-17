@@ -46,7 +46,7 @@ class Histogram:
         return blue_hist, green_hist, red_hist
 
 
-    def calcualte_histogram(self, image);
+    def calcualte_histogram(self, image):
     
         if len(image.shape) == 2:
             final_hist = self.calculate_histogram_gray_scale(image)
