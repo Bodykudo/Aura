@@ -14,6 +14,7 @@ class Histogram:
     def __init__(self):
         pass
 
+
     def convert_to_grayscale(self, image):
         # Convert image to grayscale using luminosity method
         gray_image = np.dot(image[..., :3], [0.299, 0.587, 0.114])
@@ -21,12 +22,15 @@ class Histogram:
         gray_image = gray_image.astype(np.uint8)
         return gray_image
 
+
     def calculate_histogram_gray_scale(self, image):
-        image = self.convert_to_grayscale(image)
+ 
+        # image = self.convert_to_grayscale(image)
 
         hist, bins = np.histogram(image.flatten(), bins=256, range=[0, 256])
 
         return hist
+
 
     def calculate_histogram_RGB(self, image):
 
@@ -41,17 +45,63 @@ class Histogram:
 
         return blue_hist, green_hist, red_hist
 
-    def calcuate_cumulative_histogram_gray_scale(self, image):
+
+    def calcualte_histogram(self, image);
+    
+        if len(image.shape) == 2:
+            final_hist = self.calculate_histogram_gray_scale(image)
+            
+        elif len(image.shape) == 3:
+            final_hist = self.calculate_histogram_RGB(image)
+            
+        return final_hist
+
+
+    def calculate_cumulative_distribution_gray_scale(self, image):
 
         hist, bins = np.histogram(image.flatten(), bins=256, range=[0, 256])
 
         # Calculate cumulative distribution function (CDF)
         cdf = hist.cumsum()
         cdf_normalized = cdf / float(cdf.max())
-        distribution_curve = ndimage.gaussian_filter(cdf_normalized, sigma=5)
+        
+        return cdf_normalized
+    
 
-        return cdf_normalized, distribution_curve
+    def calculate_cumulative_distribution_RGB(self, image):
 
+        b = image[:,:,0]
+        g = image[:,:,1]
+        r = image[:,:,2]
+
+        # Calculate histograms for each color channel
+        hist_b, _ = np.histogram(b.flatten(), bins=256, range=(0, 256))
+        hist_g, _ = np.histogram(g.flatten(), bins=256, range=(0, 256))
+        hist_r, _ = np.histogram(r.flatten(), bins=256, range=(0, 256))
+
+        # Calculate cumulative distribution function (CDF) for each channel
+        cdf_b = hist_b.cumsum()
+        cdf_g = hist_g.cumsum()
+        cdf_r = hist_r.cumsum()
+
+        cdf_b = cdf_b / float(cdf_b.max())
+        cdf_g = cdf_g / float(cdf_g.max())
+        cdf_r = cdf_r / float(cdf_r.max())   
+        
+        return cdf_b, cdf_g, cdf_r  
+
+
+    def calculate_cumulative_distribution(self, image):
+        
+        if len(image.shape) == 2:
+            final_cdf = self.calculate_cumulative_distribution_gray_scale(image)    
+            
+        elif len(image.shape) == 3:
+            final_cdf = self.calculate_cumulative_distribution_RGB(image)  
+        
+        return final_cdf
+    
+    
     def plot_histogram_gray_scale(self, image):
 
         plt.hist(image.ravel(), bins=256, range=[0, 1], color="black")
@@ -61,6 +111,7 @@ class Histogram:
         plt.title("Histogram of the Grayscale Image")
         plt.grid(True)
         plt.show()
+
 
     def plot_histogram_RGB(self, image):
 
@@ -75,6 +126,7 @@ class Histogram:
         plt.grid(True)
         plt.show()
 
+
     def equalize_histogram_gray_scale(self, image):
         """
         Performs histogram equalization on a grayscale image.
@@ -85,7 +137,7 @@ class Histogram:
         Returns:
             A new grayscale image with equalized histogram.
         """
-        image = self.convert_to_grayscale(image)
+        # image = self.convert_to_grayscale(image)
         # Get image histogram
         hist, bins = np.histogram(image.flatten(), bins=256, range=[0, 256])
 
@@ -101,6 +153,7 @@ class Histogram:
         img_eq = cdf[image]
 
         return img_eq
+
 
     def equalize_histogram_RGB(self, image):
         b, g, r = cv2.split(image)
@@ -132,7 +185,19 @@ class Histogram:
         img_out = cv2.merge((img_b, img_g, img_r))
         return img_out
 
-    def normalize_image(self, image):
+    
+    def equalize_histogram(self, image):
+
+        if len(image.shape) == 2:
+            image = self.equalize_histogram_gray_scale(image)
+
+        elif len(image.shape) == 3:
+            image = self.equalize_histogram_RGB(image)
+            
+        return image
+    
+    
+    def normalize_image_gray_scale(self, image):
         """Normalizes an image to the range [0, 1]."""
         image = image.astype(np.float32)
         maxVal = np.max(image)
@@ -140,6 +205,29 @@ class Histogram:
         image = (image - minVal) / (maxVal - minVal)
         return image
 
+
+    def normalize_image_RGB(self, image):
+      
+        image = image.astype(np.float32)
+        
+        for i in range(3):  # Loop through each color channel (R, G, B)
+            min_val = np.min(image[:,:,i])
+            max_val = np.max(image[:,:,i])
+            image[:,:,i] = (image[:,:,i] - min_val) / (max_val - min_val)
+        
+        return image
+
+
+    def normalize_image(self, image):
+        
+        if len(image.shape) == 2:
+            image = self.normalize_image_gray_scale(image)
+        
+        elif len(image.shape) == 3:
+            image = self.normalize_image_RGB(image)
+            
+        return image
+            
 
 if __name__ == "__main__":
     # ------------------------------------------------READ IMAGE-----------------------------------------------------------#
@@ -182,28 +270,28 @@ if __name__ == "__main__":
 
     # ------------------------------------------------------ TEST Equalization --------------------------------------------------#
 
-    equalized_image = Histogram.equalize_histogram_gray_scale(image)
+    # equalized_image = Histogram.equalize_histogram_gray_scale(image)
 
-    equalized_image_cv2 = cv2.equalizeHist(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+    # equalized_image_cv2 = cv2.equalizeHist(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
 
-    plt.figure(figsize=(10, 5))
+    # plt.figure(figsize=(10, 5))
 
-    plt.subplot(1, 3, 1)
-    plt.imshow(image, cmap="gray")  # Convert BGR to RGB for displaying with matplotlib
-    plt.title("Original Image")
-    plt.axis("off")
+    # plt.subplot(1, 3, 1)
+    # plt.imshow(image, cmap="gray")  # Convert BGR to RGB for displaying with matplotlib
+    # plt.title("Original Image")
+    # plt.axis("off")
 
-    plt.subplot(1, 3, 2)
-    plt.imshow(equalized_image, cmap="gray")  # Assuming grayscale image
-    plt.title("equalized image mathmatically")
-    plt.axis("off")
+    # plt.subplot(1, 3, 2)
+    # plt.imshow(equalized_image, cmap="gray")  # Assuming grayscale image
+    # plt.title("equalized image mathmatically")
+    # plt.axis("off")
 
-    plt.subplot(1, 3, 3)
-    plt.imshow(equalized_image_cv2, cmap="gray")  # Assuming grayscale image
-    plt.title("equalized image cv2")
-    plt.axis("off")
+    # plt.subplot(1, 3, 3)
+    # plt.imshow(equalized_image_cv2, cmap="gray")  # Assuming grayscale image
+    # plt.title("equalized image cv2")
+    # plt.axis("off")
 
-    plt.show()
+    # plt.show()
     # ------------------------------------------------------TEST NORMALIZATION--------------------------------------------------#
 
     # image_normalized = Histogram.normalize_image(image)
