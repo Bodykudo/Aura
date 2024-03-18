@@ -148,7 +148,7 @@ function Edge() {
 
     const body = {
       detector: data.type,
-      direction: data.direction,
+      direction: data.direction || 'x',
       kernelSize: data.kernelSize,
       sigma: data.kernelSize,
       lowerThreshold: data.lowerThreshold,

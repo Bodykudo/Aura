@@ -19,8 +19,8 @@ def read_image(image_path, grayscale=False):
     if grayscale:
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     else:
-        image = cv2.imread(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        original_image = cv2.imread(image_path)
+        image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
     return image
 
 
@@ -36,8 +36,12 @@ def get_image(image_id):
         raise HTTPException(status_code=404, detail="Image not found.")
 
 
-def convert_image(output_image):
-    output_image = np.clip(output_image, 0, 255).astype(np.uint8)
+def convert_image(output_image, is_float=False):
+    if is_float:
+        output_image = np.clip(output_image * 255, 0, 255).astype(np.uint8)
+    else:
+        output_image = np.clip(output_image, 0, 255).astype(np.uint8)
+
     is_success, buffer = cv2.imencode(
         ".jpg", cv2.cvtColor(output_image, cv2.COLOR_RGB2BGR)
     )

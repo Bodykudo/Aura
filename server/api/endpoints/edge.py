@@ -44,6 +44,8 @@ async def apply_edge(image_id: str, edge: edgeModel):
             edge.upperThreshold,
         )
 
+    print(output_image)
+
     output_image = convert_image(output_image)
 
     return {
