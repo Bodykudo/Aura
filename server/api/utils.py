@@ -19,7 +19,8 @@ def read_image(image_path, grayscale=False):
     if grayscale:
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     else:
-        image = cv2.imread(image_path, cv2.COLOR_BGR2RGB)
+        image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 
 
