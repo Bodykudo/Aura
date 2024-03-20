@@ -19,7 +19,7 @@ async def apply_thresholding(image_id: str, thresholding: ThresholdingModel):
     output_image = None
     if thresholding.type == "local":
         output_image = Thresholding.local_thresholding(
-            image_path, thresholding.blockSize
+            image_path, thresholding.thresholdMargin, thresholding.blockSize
         )
     elif thresholding.type == "global":
         output_image = Thresholding.global_thresholding(

@@ -162,34 +162,34 @@ class EdgeDetector:
 
 
 # test for edge detection
-image_path = "image1.jpg"
-image = cv2.imread(image_path)
+# image_path = "image1.jpg"
+# image = cv2.imread(image_path)
 
-if image is not None:
-    image_after_sobel, _ = EdgeDetector.sobel_edge_detection(image, 3, 1, direction="x")
-    image_after_robert = EdgeDetector.roberts_edge_detection(image, 3)
-    image_after_canny = EdgeDetector.canny_edge_detection(
-        image, gaussian_ksize=5, sigma=0, low_threshold=50, high_threshold=150
-    )
-    image_after_prewitt = EdgeDetector.prewitt_edge_detection(image, 3)
+# if image is not None:
+#     image_after_sobel, _ = EdgeDetector.sobel_edge_detection(image, 3, 1, direction="x")
+#     image_after_robert = EdgeDetector.roberts_edge_detection(image, 3)
+#     image_after_canny = EdgeDetector.canny_edge_detection(
+#         image, gaussian_ksize=5, sigma=0, low_threshold=50, high_threshold=150
+#     )
+#     image_after_prewitt = EdgeDetector.prewitt_edge_detection(image, 3)
 
-    plt.subplot(2, 2, 1)
-    plt.imshow(image_after_prewitt, cmap="gray")
-    plt.title("image_after_prewitt")
+#     plt.subplot(2, 2, 1)
+#     plt.imshow(image_after_prewitt, cmap="gray")
+#     plt.title("image_after_prewitt")
 
-    plt.subplot(2, 2, 2)
-    plt.imshow(image_after_canny, cmap="gray")
-    plt.title("image_after_canny")
+#     plt.subplot(2, 2, 2)
+#     plt.imshow(image_after_canny, cmap="gray")
+#     plt.title("image_after_canny")
 
-    plt.subplot(2, 2, 3)
-    plt.imshow(image_after_sobel, cmap="gray")
-    plt.title("image_after_sobel")
+#     plt.subplot(2, 2, 3)
+#     plt.imshow(image_after_sobel, cmap="gray")
+#     plt.title("image_after_sobel")
 
-    plt.subplot(2, 2, 4)
-    plt.imshow(image_after_robert, cmap="gray")
-    plt.title("image_after_robert")
+#     plt.subplot(2, 2, 4)
+#     plt.imshow(image_after_robert, cmap="gray")
+#     plt.title("image_after_robert")
 
-    plt.tight_layout()
-    plt.show()
-else:
-    print("Error: Unable to read the image.")
+#     plt.tight_layout()
+#     plt.show()
+# else:
+#     print("Error: Unable to read the image.")

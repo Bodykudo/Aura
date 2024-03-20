@@ -51,8 +51,8 @@ const inputs = [
   {
     value: 'normalization',
     inputs: [
-      { label: 'Min. Width', name: 'minWidth', min: 0, max: 400, step: 1 },
-      { label: 'Max. Width', name: 'maxWidth', min: 0, max: 400, step: 1 }
+      // { label: 'Min. Width', name: 'minWidth', min: 0, max: 400, step: 1 },
+      // { label: 'Max. Width', name: 'maxWidth', min: 0, max: 400, step: 1 }
     ]
   }
 ];
@@ -242,36 +242,6 @@ function Histogram() {
                     </FormItem>
                   )}
                 />
-
-                <div className="flex flex-wrap gap-2">
-                  {inputs.find((input) => input.value === form.watch('type')) &&
-                    inputs
-                      .find((input) => input.value === form.watch('type'))
-                      ?.inputs.map((input, index) => {
-                        return (
-                          <FormField
-                            key={index}
-                            name={input.name}
-                            render={({ field }) => (
-                              <FormItem className="w-[150px]">
-                                <Label htmlFor={input.name}>{input.label}</Label>
-                                <FormControl className="p-2">
-                                  <Input
-                                    type="number"
-                                    id={input.name}
-                                    min={input.min}
-                                    max={input.max}
-                                    step={input.step}
-                                    {...field}
-                                    onChange={(e) => field.onChange(Number(e.target.value))}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        );
-                      })}
-                </div>
               </div>
               <Button type="submit">Apply Filter</Button>
             </form>

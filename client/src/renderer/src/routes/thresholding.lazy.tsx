@@ -29,8 +29,9 @@ import placeholder from '@renderer/assets/placeholder.png';
 
 const thresholdingSchema = z.object({
   type: z.enum(['local', 'global']).nullable(),
+  threshold: z.number(),
+  thresholdMargin: z.number(),
   blockSize: z.number(),
-  threshold: z.number()
 });
 
 const thresholdingOptions = [
@@ -41,7 +42,9 @@ const thresholdingOptions = [
 const inputs = [
   {
     value: 'local',
-    inputs: [{ label: 'Block Size', name: 'blockSize', min: 1, max: 13, step: 2 }]
+    inputs: [
+    {label: 'Thresholding Margin', name: 'thresholdMargin', min: 0, max: 255, step: 1},
+      { label: 'Block Size', name: 'blockSize', min: 1, max: 13, step: 2 }]
   },
   {
     value: 'global',
@@ -64,8 +67,9 @@ function Thresholding() {
   const form = useForm<z.infer<typeof thresholdingSchema>>({
     resolver: zodResolver(thresholdingSchema),
     defaultValues: {
+      threshold: 127,
+      thresholdMargin: 7,
       blockSize: 11,
-      threshold: 127
     }
   });
 
@@ -111,8 +115,9 @@ function Thresholding() {
   const onSubmit = (data: z.infer<typeof thresholdingSchema>) => {
     const body = {
       type: data.type,
+      threshold: data.threshold,
+      thresholdMargin: data.thresholdMargin,
       blockSize: data.blockSize,
-      threshold: data.threshold
     };
 
     setIsProcessing(true);
