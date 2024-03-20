@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 
-from api.utils import convert_image, get_image
 from api.schemas.thresholding_model import ThresholdingModel
 from api.services.thresholding_service import Thresholding
+from api.utils import convert_image, get_image
 
 router = APIRouter()
 

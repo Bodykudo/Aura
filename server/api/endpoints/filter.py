@@ -1,10 +1,9 @@
 from fastapi import APIRouter, HTTPException
 
-from api.utils import convert_image, get_image, read_image
-from api.config import uploads_folder
 from api.schemas.filter_model import FilterModel
 from api.services.filter_service import Filter
 from api.services.hybrid_service import Hybrid
+from api.utils import convert_image, get_image, read_image
 
 import numpy as np
 
@@ -19,8 +18,8 @@ async def apply_filter(image_id: str, filter: FilterModel):
         raise HTTPException(status_code=400, detail="Filter type doesn't exist.")
 
     image_path = get_image(image_id)
-
     filtered_image = None
+
     if filter.type == "average":
         filtered_image = Filter.average_filter(image_path, filter.kernelSize)
     elif filter.type == "gaussian":

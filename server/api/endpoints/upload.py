@@ -1,8 +1,8 @@
 import os
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
-from api.utils import generate_image_id
 from api.config import uploads_folder
+from api.utils import generate_image_id
 
 router = APIRouter()
 

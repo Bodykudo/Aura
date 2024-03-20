@@ -7,8 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Heading from '@renderer/components/Heading';
 import Dropzone from '@renderer/components/Dropzone';
 import OutputImage from '@renderer/components/OutputImage';
+import HistogramChart from '@renderer/components/HistogramChart';
 import { Form, FormControl, FormField, FormItem } from '@renderer/components/ui/form';
-import { Input } from '@renderer/components/ui/input';
 import { Label } from '@renderer/components/ui/label';
 import {
   Select,
@@ -23,16 +23,6 @@ import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
 import { BarChartBig } from 'lucide-react';
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  AreaChart,
-  Area,
-  ResponsiveContainer
-} from 'recharts';
 import { useToast } from '@renderer/components/ui/use-toast';
 
 const noiseSchema = z.object({
@@ -45,16 +35,6 @@ const typesOptions = [
   { label: 'Grayscale', value: 'grayscale' },
   { label: 'Normalization', value: 'normalization' },
   { label: 'Equalization', value: 'equalization' }
-];
-
-const inputs = [
-  {
-    value: 'normalization',
-    inputs: [
-      // { label: 'Min. Width', name: 'minWidth', min: 0, max: 400, step: 1 },
-      // { label: 'Max. Width', name: 'maxWidth', min: 0, max: 400, step: 1 }
-    ]
-  }
 ];
 
 function Histogram() {
@@ -77,9 +57,10 @@ function Histogram() {
   });
 
   const [originalHistogram, setOriginalHistogram] = useState([]);
-  const [newHistogram, setNewHistogram] = useState([]);
   const [originalCdf, setOriginalCdf] = useState([]);
-  const [newCdf, setNewCdf] = useState([]);
+
+  const [transformedHistogram, setTransformedHistogram] = useState([]);
+  const [transformedCdf, setTransformedCdf] = useState([]);
 
   const { toast } = useToast();
 
@@ -103,64 +84,11 @@ function Histogram() {
           setOriginalCdf(original.cdf);
         }
 
-        const newData = event.data.histogram.new;
-        if (newData) {
-          setNewHistogram(newData.histogram);
-          setNewCdf(newData.cdf);
+        const transformed = event.data.histogram.transformed;
+        if (transformed) {
+          setTransformedHistogram(transformed.histogram);
+          setTransformedCdf(transformed.cdf);
         }
-        // if (original) {
-        //   const originalData = original.red.map((value: number, index: number) => {
-        //     return {
-        //       name: index,
-        //       red: value,
-        //       green: original.green[index],
-        //       blue: original.blue[index]
-        //     };
-        //   });
-        //   setOriginalHistogram(originalData);
-        //   const originalCdfData = original.red.map((value: number, index: number) => {
-        //     return {
-        //       name: index,
-        //       red: original.red.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0),
-        //       green: original.green.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0),
-        //       blue: original.blue.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0)
-        //     };
-        //   });
-        //   setOriginalCdf(originalCdfData);
-        // }
-        // const newHist = event.data.histogram.new;
-        // if (newHist) {
-        //   const newData = newHist.red.map((value: number, index: number) => {
-        //     return {
-        //       name: index,
-        //       red: value,
-        //       green: newHist.green[index],
-        //       blue: newHist.blue[index]
-        //     };
-        //   });
-        //   // Find the last non-zero entry
-        //   let lastIndex = newData.length - 1;
-        //   while (
-        //     lastIndex >= 0 &&
-        //     newData[lastIndex].red === 0 &&
-        //     newData[lastIndex].green === 0 &&
-        //     newData[lastIndex].blue === 0
-        //   ) {
-        //     lastIndex--;
-        //   }
-        //   // Trim the zeros from the end
-        //   const trimmedData = newData.slice(0, lastIndex + 1);
-        //   setNewHistogram(trimmedData);
-        //   const newCdfData = newHist.red.map((value: number, index: number) => {
-        //     return {
-        //       name: index,
-        //       red: newHist.red.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0),
-        //       green: newHist.green.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0),
-        //       blue: newHist.blue.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0)
-        //     };
-        //   });
-        //   setNewCdf(newCdfData);
-        // }
       }
       setIsProcessing(false);
     };
@@ -222,7 +150,7 @@ function Histogram() {
                   render={({ field }) => (
                     <FormItem className="w-[250px] mr-4">
                       <Label htmlFor="transformationType">Transform Image</Label>
-                      <Select onValueChange={field.onChange}>
+                      <Select disabled={isProcessing} onValueChange={field.onChange}>
                         <FormControl id="transformationType">
                           <SelectTrigger>
                             <SelectValue placeholder="Select transformation type" />
@@ -243,7 +171,9 @@ function Histogram() {
                   )}
                 />
               </div>
-              <Button type="submit">Apply Filter</Button>
+              <Button disabled={!filesIds[0] || isProcessing} type="submit">
+                Transform Image
+              </Button>
             </form>
           </Form>
         </div>
@@ -251,26 +181,30 @@ function Histogram() {
           <Dropzone index={0} />
           <OutputImage index={0} />
         </div>
-        <div className="flex flex-col md:flex-row gap-4 w-full mt-8 mb-4">
-          <div className="flex flex-1 flex-col items-center gap-2">
-            <h2 className="text-xl font-bold">RGB Histogram</h2>
-            <RGBHistogram data={originalHistogram} />
+        {originalHistogram.length > 0 && (
+          <div className="flex flex-col md:flex-row gap-4 w-full mt-8 mb-4">
+            <div className="flex flex-1 flex-col items-center gap-2">
+              <h2 className="text-xl font-bold">Origina Histogram</h2>
+              <HistogramChart data={originalHistogram} />
+            </div>
+            <div className="flex flex-1 flex-col items-center gap-2">
+              <h2 className="text-xl font-bold">Transformed Histogram</h2>
+              <HistogramChart data={transformedHistogram} />
+            </div>
           </div>
-          <div className="flex flex-1 flex-col items-center gap-2">
-            <h2 className="text-xl font-bold">RGB Histogram</h2>
-            <RGBHistogram data={newHistogram} />
+        )}
+        {transformedHistogram.length > 0 && (
+          <div className="flex flex-col md:flex-row gap-4 w-full mt-8 mb-4">
+            <div className="flex flex-1 flex-col items-center gap-2">
+              <h2 className="text-xl font-bold">Original CDF</h2>
+              <HistogramChart data={originalCdf} />
+            </div>
+            <div className="flex flex-1 flex-col items-center gap-2">
+              <h2 className="text-xl font-bold">Transformed CDF</h2>
+              <HistogramChart data={transformedCdf} />
+            </div>
           </div>
-        </div>
-        <div className="flex flex-col md:flex-row gap-4 w-full mt-8 mb-4">
-          <div className="flex flex-1 flex-col items-center gap-2">
-            <h2 className="text-xl font-bold">RGB CDF</h2>
-            <RGBHistogram data={originalCdf} />
-          </div>
-          <div className="flex flex-1 flex-col items-center gap-2">
-            <h2 className="text-xl font-bold">RGB CDF</h2>
-            <RGBHistogram data={newCdf} />
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -279,59 +213,3 @@ function Histogram() {
 export const Route = createLazyFileRoute('/histogram')({
   component: Histogram
 });
-
-const ddata = [
-  { name: '0-15', red: 4000, green: 2400, blue: 2400 },
-  { name: '16-31', red: 3000, green: 1398, blue: 2210 },
-  { name: '32-47', red: 2000, green: 9800, blue: 2290 },
-  { name: '48-63', red: 2780, green: 3908, blue: 2000 },
-  { name: '64-79', red: 1890, green: 4800, blue: 2181 },
-  { name: '80-95', red: 2390, green: 3800, blue: 2500 },
-  { name: '96-111', red: 3490, green: 4300, blue: 2100 },
-  { name: '112-127', red: 4000, green: 2400, blue: 2400 },
-  { name: '128-143', red: 3000, green: 1398, blue: 2210 },
-  { name: '144-159', red: 2000, green: 9800, blue: 2290 },
-  { name: '160-175', red: 2780, green: 3908, blue: 2000 },
-  { name: '176-191', red: 1890, green: 4800, blue: 2181 },
-  { name: '192-207', red: 2390, green: 3800, blue: 2500 },
-  { name: '208-223', red: 3490, green: 4300, blue: 2100 },
-  { name: '224-239', red: 4000, green: 2400, blue: 2400 },
-  { name: '240-255', red: 3000, green: 1398, blue: 2210 }
-];
-
-const cdfData = ddata.map((item, index) => {
-  return {
-    name: item.name,
-    red: ddata.slice(0, index + 1).reduce((acc, curr) => acc + curr.red, 0),
-    green: ddata.slice(0, index + 1).reduce((acc, curr) => acc + curr.green, 0),
-    blue: ddata.slice(0, index + 1).reduce((acc, curr) => acc + curr.blue, 0)
-  };
-});
-
-function RGBHistogram({ data, isCdf = false }: { data: any; isCdf?: boolean }) {
-  return (
-    <ResponsiveContainer width="100%" height={300}>
-      <AreaChart
-        width={600}
-        height={300}
-        data={data}
-        margin={{
-          top: 5,
-          right: 30,
-          left: 20,
-          bottom: 5
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Area type="monotone" dataKey="red" stackId="1" stroke="red" fill="red" />
-        <Area type="monotone" dataKey="green" stackId="1" stroke="green" fill="green" />
-        <Area type="monotone" dataKey="blue" stackId="1" stroke="blue" fill="blue" />
-        <Area type="monotone" dataKey="gray" stackId="1" stroke="black" fill="black" />
-      </AreaChart>
-    </ResponsiveContainer>
-  );
-}

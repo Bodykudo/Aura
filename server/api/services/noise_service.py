@@ -1,4 +1,3 @@
-import cv2
 import numpy as np
 
 from api.utils import read_image

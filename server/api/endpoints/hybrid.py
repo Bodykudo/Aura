@@ -1,10 +1,8 @@
 from fastapi import APIRouter, HTTPException
 
-from api.utils import convert_image, get_image
-from api.config import uploads_folder
-from api.services.filter_service import Filter
 from api.schemas.hybrid_model import HybridModel
 from api.services.hybrid_service import Hybrid
+from api.utils import convert_image, get_image
 
 router = APIRouter()
 

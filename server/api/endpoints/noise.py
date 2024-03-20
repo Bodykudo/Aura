@@ -1,9 +1,8 @@
 from fastapi import APIRouter, HTTPException
 
-from api.utils import convert_image, get_image
-from api.config import uploads_folder
 from api.schemas.noise_model import NoiseModel
 from api.services.noise_service import Noise
+from api.utils import convert_image, get_image
 
 router = APIRouter()
 

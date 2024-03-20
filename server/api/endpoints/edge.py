@@ -16,8 +16,6 @@ async def apply_edge(image_id: str, edge: edgeModel):
         raise HTTPException(status_code=400, detail="Edge detector doesn't exist.")
 
     image_path = get_image(image_id)
-    image = read_image(image_path)
-
     output_image = None
 
     if edge.detector == "sobel":
@@ -27,30 +25,27 @@ async def apply_edge(image_id: str, edge: edgeModel):
             )
         else:
             output_image = EdgeDetector.sobel_edge_detection(
-                image,
+                image_path,
                 edge.kernelSize,
                 edge.direction,
             )
     elif edge.detector == "roberts":
-        output_image = EdgeDetector.roberts_edge_detection(image, edge.kernelSize)
+        output_image = EdgeDetector.roberts_edge_detection(image_path, edge.kernelSize)
     elif edge.detector == "prewitt":
-        output_image = EdgeDetector.prewitt_edge_detection(image, edge.kernelSize)
+        output_image = EdgeDetector.prewitt_edge_detection(image_path, edge.kernelSize)
     elif edge.detector == "canny":
         output_image = EdgeDetector.canny_edge_detection(
-            image,
+            image_path,
             edge.kernelSize,
             edge.sigma,
             edge.lowerThreshold,
             edge.upperThreshold,
         )
 
-    print(output_image)
-
     output_image = convert_image(output_image)
 
     return {
         "success": True,
-        "message": "Edge applied successfully.",
-        "type": edge.detector,
+        "message": "Edge detection applied successfully.",
         "image": output_image,
     }

@@ -15,7 +15,7 @@ def generate_image_id():
     return imageID
 
 
-def read_image(image_path, grayscale=False):
+def read_image(image_path: str, grayscale=False):
     if grayscale:
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     else:
@@ -78,30 +78,19 @@ def pad_image(image, kernel_size):
     return padded_image, pad
 
 
-def convolve(image, kernel):
-    height, width, channels = get_image_dimensions(image)
-    padded_image, pad = pad_image(image, kernel.shape[0])
-
-    result = np.zeros_like(image, dtype=np.uint8)
-
-    for i in range(channels):
-        for y in range(pad, height + pad):
-            for x in range(pad, width + pad):
-                if channels == 1:
-                    result[y - pad, x - pad] = np.sum(
-                        padded_image[y - pad : y + pad + 1, x - pad : x + pad + 1]
-                        * kernel
-                    )
-                else:
-                    result[y - pad, x - pad, i] = np.sum(
-                        padded_image[y - pad : y + pad + 1, x - pad : x + pad + 1, i]
-                        * kernel
-                    )
-
-    return np.clip(result, 0, 255).astype(np.uint8)
-
-
 def compute_fft(image):
     f_transform = np.fft.fft2(image)
     f_transform_shifted = np.fft.fftshift(f_transform)
     return f_transform_shifted
+
+
+def gaussian_kernel(size: int, sigma: float):
+    kernel = np.fromfunction(
+        lambda x, y: (1 / (2 * np.pi * sigma**2))
+        * np.exp(
+            -((x - (size - 1) / 2) ** 2 + (y - (size - 1) / 2) ** 2) / (2 * sigma**2)
+        ),
+        (size, size),
+    )
+    kernel = (kernel + kernel.T) / 2
+    return kernel / np.sum(kernel)

@@ -7,9 +7,9 @@ from api.utils import get_image_dimensions, compute_fft, read_image
 class Hybrid:
 
     @staticmethod
-    def img_adjustment(image1, image2):
-        width_1, height_1, _ = get_image_dimensions(image1)
-        width_2, height_2, _ = get_image_dimensions(image2)
+    def img_adjustment(image_1, image_2):
+        width_1, height_1, _ = get_image_dimensions(image_1)
+        width_2, height_2, _ = get_image_dimensions(image_2)
         if width_1 > width_2:
             width = width_2
         else:
@@ -19,12 +19,12 @@ class Hybrid:
             height = height_2
         else:
             height = height_1
-        adjusted_img1 = cv2.resize(image1, (width, height))
-        adjusted_img2 = cv2.resize(image2, (width, height))
+        adjusted_img1 = cv2.resize(image_1, (width, height))
+        adjusted_img2 = cv2.resize(image_2, (width, height))
         return adjusted_img1, adjusted_img2
 
     @staticmethod
-    def apply_low_pass(image, radius):
+    def apply_low_pass(image, radius: int):
         width, height, _ = get_image_dimensions(image)
         fft_image = compute_fft(image)
         center_w, center_h = width // 2, height // 2
@@ -38,7 +38,7 @@ class Hybrid:
         return masked_fft_img, filtered_image
 
     @staticmethod
-    def apply_high_pass(image, radius):
+    def apply_high_pass(image, radius: int):
         width, height, _ = get_image_dimensions(image)
         fft_image = compute_fft(image)
         center_w, center_h = width // 2, height // 2
@@ -52,18 +52,19 @@ class Hybrid:
         return masked_fft_image, filtered_image
 
     @staticmethod
-    def apply_mixer(img_1_path, img_2_path, filter_1, radius):
-        # Read image
-        img_1 = read_image(img_1_path, grayscale=True)
-        img_2 = read_image(img_2_path, grayscale=True)
-        adjusted_img1, adjusted_img2 = Hybrid.img_adjustment(img_1, img_2)
+    def apply_mixer(image_1_path: str, image_2_path: str, filter_1: str, radius: int):
+        image_1 = read_image(image_1_path, grayscale=True)
+        image_2 = read_image(image_2_path, grayscale=True)
+        adjusted_image_1, adjusted_img2 = Hybrid.img_adjustment(image_1, image_2)
         if filter_1 == "high":
-            fft_img1, output_img1 = Hybrid.apply_high_pass(adjusted_img1, radius)
-            fft_img2, output_img2 = Hybrid.apply_low_pass(adjusted_img2, radius)
+            ff_image_1, output_image_1 = Hybrid.apply_high_pass(
+                adjusted_image_1, radius
+            )
+            fft_image_2, output_image_2 = Hybrid.apply_low_pass(adjusted_img2, radius)
         else:
-            fft_img2, output_img2 = Hybrid.apply_high_pass(adjusted_img2, radius)
-            fft_img1, output_img1 = Hybrid.apply_low_pass(adjusted_img1, radius)
+            fft_image_2, output_image_2 = Hybrid.apply_high_pass(adjusted_img2, radius)
+            ff_image_1, output_image_1 = Hybrid.apply_low_pass(adjusted_image_1, radius)
 
-        mixed_img = fft_img1 + fft_img2
-        output_mixed_img = np.abs(np.fft.ifft2(np.fft.ifftshift(mixed_img)))
-        return output_mixed_img, output_img1, output_img2
+        fft_hybrid_image = ff_image_1 + fft_image_2
+        hybrid_image = np.abs(np.fft.ifft2(np.fft.ifftshift(fft_hybrid_image)))
+        return hybrid_image, output_image_1, output_image_2
