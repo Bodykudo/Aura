@@ -84,7 +84,7 @@ class HoughTransform:
         return cnadidates_indices, rhos, thetas
 
     @staticmethod
-    def draw_lines(cnadidates_indices, rhos, thetas):
+    def draw_lines(image,cnadidates_indices, rhos, thetas):
         for rho_idx, theta_idx in cnadidates_indices:
             rho = rhos[rho_idx]
             theta = thetas[theta_idx]
@@ -106,7 +106,7 @@ class HoughTransform:
         candidates_indices, rhos, thetas = HoughTransform.find_lines(
             edges, rho, theta, threshold
         )
-        result = HoughTransform.draw_lines(candidates_indices, rhos, thetas)
+        result = HoughTransform.draw_lines(image,candidates_indices, rhos, thetas)
         return result
 
     @staticmethod
