@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from api.utils import convert_image, get_image, read_image
 from api.config import uploads_folder
-from api.schemas.edge_model import edgeModel
+from api.schemas.edge_model import EdgeModel
 from api.services.edge_service import EdgeDetector
 
 router = APIRouter()
@@ -10,8 +10,11 @@ edge_detector = ["sobel", "roberts", "prewitt", "canny"]
 sobel_detector_directions = ["x", "y", "both"]
 
 
-@router.post("/api/edge/{image_id}")
-async def apply_edge(image_id: str, edge: edgeModel):
+@router.post("/edge/{image_id}")
+async def apply_edge(image_id: str, edge: EdgeModel):
+    """
+    Apply edge detection to an image.
+    """
     if edge.detector not in edge_detector:
         raise HTTPException(status_code=400, detail="Edge detector doesn't exist.")
 

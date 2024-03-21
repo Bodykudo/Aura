@@ -9,8 +9,11 @@ router = APIRouter()
 noise_types = ["uniform", "gaussian", "salt_and_pepper"]
 
 
-@router.post("/api/noise/{image_id}")
+@router.post("/noise/{image_id}")
 async def apply_noise(image_id: str, noise: NoiseModel):
+    """
+    Add noise to an image.
+    """
     if noise.type not in noise_types:
         raise HTTPException(status_code=400, detail="Noise type doesn't exist.")
 

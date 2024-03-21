@@ -12,8 +12,11 @@ router = APIRouter()
 filter_types = ["average", "gaussian", "median", "low", "high"]
 
 
-@router.post("/api/filter/{image_id}")
+@router.post("/filter/{image_id}")
 async def apply_filter(image_id: str, filter: FilterModel):
+    """
+    Apply an average, gaussian, median, low-pass, or high-pass filter to an image.
+    """
     if filter.type not in filter_types:
         raise HTTPException(status_code=400, detail="Filter type doesn't exist.")
 

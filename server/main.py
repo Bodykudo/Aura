@@ -1,7 +1,8 @@
+import os
 from fastapi import FastAPI
+
 from api.endpoints import upload, filter, noise, hybrid, thresholding, edge, histogram
 from api.config import uploads_folder
-import os
 
 
 app = FastAPI(

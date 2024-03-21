@@ -9,8 +9,11 @@ router = APIRouter()
 filter_types = ["high", "low"]
 
 
-@router.post("/api/hybrid")
+@router.post("/hybrid")
 async def hybrid_image(hybrid_options: HybridModel):
+    """
+    Create a hybrid image by combining two images with different filters.
+    """
     if (
         hybrid_options.firstFilterType not in filter_types
         or hybrid_options.secondFilterType not in filter_types

@@ -9,8 +9,11 @@ router = APIRouter()
 thresholding_types = ["local", "global"]
 
 
-@router.post("/api/thresholding/{image_id}")
+@router.post("/thresholding/{image_id}")
 async def apply_thresholding(image_id: str, thresholding: ThresholdingModel):
+    """
+    Apply local/global thresholding to an image.
+    """
     if thresholding.type not in thresholding_types:
         raise HTTPException(status_code=400, detail="Thresholding type doesn't exist.")
 

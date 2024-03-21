@@ -10,8 +10,11 @@ router = APIRouter()
 transform_types = ["grayscale", "normalization", "equalization"]
 
 
-@router.post("/api/histogram/{image_id}")
+@router.post("/histogram/{image_id}")
 async def apply_histogram(image_id: str, histogram: HistogramModel):
+    """
+    Apply grayscale, normalization, or equalization to an image.
+    """
     if histogram.type not in transform_types:
         raise HTTPException(status_code=400, detail="Histogram type doesn't exist")
 

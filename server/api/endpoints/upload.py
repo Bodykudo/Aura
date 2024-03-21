@@ -7,8 +7,11 @@ from api.utils import generate_image_id
 router = APIRouter()
 
 
-@router.post("/api/upload")
+@router.post("/upload")
 async def upload_image(file: UploadFile = File(...)):
+    """
+    Upload an image file to the server.
+    """
     allowed_extensions = {"png", "jpg", "jpeg"}
     file_extension = file.filename.split(".")[-1].lower()
     if file_extension not in allowed_extensions:
