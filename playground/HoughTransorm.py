@@ -24,7 +24,7 @@ class HoughTransform:
         candidate_idxs = candidate_idxs[sorted_idxs]
         return candidate_idxs,rhos,thetas
     @staticmethod
-    def draw_lines(candidate_idxs,rhos,thetas):
+    def draw_lines(candidate_idxs,rhos,thetas,image):
         for rho_idx, theta_idx in candidate_idxs:
             rho = rhos[rho_idx]
             theta = thetas[theta_idx]
@@ -36,7 +36,7 @@ class HoughTransform:
             y1 = int(y0 + 1000 * (a))
             x2 = int(x0 - 1000 * (-b))
             y2 = int(y0 - 1000 * (a))
-            cv2.line(image, (x1, y1), (x2, y2), (0, 0, 255), 2)
+            cv2.line(image, (x1, y1), (x2, y2), (0, 0, 255), 1)
 
         return image
     @staticmethod
@@ -44,21 +44,57 @@ class HoughTransform:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(gray, 50, 150, apertureSize=3)
         candidate_idxs,rhos,thetas=HoughTransform.find_lines(edges,rho,theta,threshold)
-        result=HoughTransform.draw_lines(candidate_idxs,rhos,thetas)
+        result=HoughTransform.draw_lines(candidate_idxs,rhos,thetas,image)
         return result
 
 
-    @staticmethod
-    def detect_circles():
-        pass
+    # @staticmethod
+    # def find_circles(edges,min_radius,max_radius,threshold):
+    #     height, width = edges.shape
+    #     accumulator = np.zeros((height, width, max_radius - min_radius + 1), dtype=np.uint64)
+    #     for y in range(height):
+    #         for x in range(width):
+    #             if edges[y, x] != 0:
+    #                 for r in range(min_radius, max_radius + 1):
+    #                     for theta in range(0, 360):
+    #                         a = x - int(r * np.cos(np.deg2rad(theta)))
+    #                         b = y - int(r * np.sin(np.deg2rad(theta)))
+    #                         if 0 <= a < width and 0 <= b < height:
+    #                             accumulator[b, a, r - min_radius] += 1
+    #     circles = np.argwhere(accumulator >= threshold)
+    #     detected_circles = []
+    #     for y, x, r_idx in circles:
+    #         detected_circles.append((x, y, r_idx + min_radius))
+    #     print(detected_circles.shape)
+    #     return detected_circles
+    # @staticmethod
+    # def draw_circles(detected_circles):
+    #     for x, y, r in detected_circles:
+    #         cv2.circle(image, (x, y), r, (255, 255, 0), 2)
+    #
+    # @staticmethod
+    # def detect_circles(image,min_radius=10,max_radius=100,threshold=30):
+    #     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    #     edges = cv2.Canny(gray, 50, 150)
+    #     detected_circles=HoughTransform.find_circles(edges,min_radius,max_radius,threshold)
+    #     # HoughTransform.draw_circles(detected_circles)
+
+
     @staticmethod
     def detect_ellipses():
         pass
 
 
 # Testing
-image = cv2.imread("test_lines.png")
+image = cv2.imread("lines.png")
 lines_detected = HoughTransform.detect_lines(image)
 cv2.imshow("Detected Lines", lines_detected)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+# # Testing Circle
+# image = cv2.imread("circletest.jpg")
+# lines_detected = HoughTransform.detect_circles(image)
+# cv2.imshow("Detected Circle", lines_detected)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
