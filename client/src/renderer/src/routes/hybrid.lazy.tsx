@@ -25,6 +25,10 @@ import { Button } from '@renderer/components/ui/button';
 import useGlobalState from '@renderer/hooks/useGlobalState';
 import { useToast } from '@renderer/components/ui/use-toast';
 
+import placeholder from '@renderer/assets/placeholder.png';
+import placeholder2 from '@renderer/assets/placeholder2.png';
+import placeholder3 from '@renderer/assets/placeholder3.png';
+
 const hybridSchema = z.object({
   firstImage: z.enum(['low', 'high']),
   secondImage: z.enum(['low', 'high']),
@@ -237,16 +241,16 @@ function Hybrid() {
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex flex-col md:flex-row gap-4 w-full">
               <Dropzone index={0} />
-              <OutputImage index={0} />
+              <OutputImage index={0} placeholder={placeholder} />
             </div>
             <div className="flex flex-col md:flex-row gap-4 w-full">
               <Dropzone index={1} />
-              <OutputImage index={1} />
+              <OutputImage index={1} placeholder={placeholder2} />
             </div>
           </div>
 
           <div className="w-full md:w-[50%] mb-4 mx-auto">
-            <OutputImage index={2} />
+            <OutputImage index={2} placeholder={placeholder3} />
           </div>
         </div>
       </div>

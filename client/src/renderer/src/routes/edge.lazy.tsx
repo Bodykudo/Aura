@@ -3,6 +3,7 @@ import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ScanIcon } from 'lucide-react';
 
 import Heading from '@renderer/components/Heading';
 import Dropzone from '@renderer/components/Dropzone';
@@ -22,10 +23,9 @@ import {
 import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
-import { ScanIcon } from 'lucide-react';
+import { useToast } from '@renderer/components/ui/use-toast';
 
 import placeholder from '@renderer/assets/placeholder2.png';
-import { useToast } from '@renderer/components/ui/use-toast';
 
 const noiseSchema = z.object({
   type: z.enum(['sobel', 'roberts', 'prewitt', 'canny']).nullable(),

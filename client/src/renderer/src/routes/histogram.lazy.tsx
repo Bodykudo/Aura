@@ -3,6 +3,7 @@ import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { BarChartBig } from 'lucide-react';
 
 import Heading from '@renderer/components/Heading';
 import Dropzone from '@renderer/components/Dropzone';
@@ -22,8 +23,9 @@ import {
 import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
-import { BarChartBig } from 'lucide-react';
 import { useToast } from '@renderer/components/ui/use-toast';
+
+import placeholder from '@renderer/assets/placeholder3.png';
 
 const noiseSchema = z.object({
   type: z.enum(['grayscale', 'normalization', 'equalization']).nullable(),
@@ -179,7 +181,7 @@ function Histogram() {
         </div>
         <div className="flex flex-col md:flex-row gap-4 w-full">
           <Dropzone index={0} />
-          <OutputImage index={0} />
+          <OutputImage index={0} placeholder={placeholder} />
         </div>
         {originalHistogram.length > 0 && (
           <div className="flex flex-col md:flex-row gap-4 w-full mt-8 mb-4">

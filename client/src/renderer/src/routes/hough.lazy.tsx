@@ -27,7 +27,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@renderer/components/ui
 import useGlobalState from '@renderer/hooks/useGlobalState';
 import { useToast } from '@renderer/components/ui/use-toast';
 
-import placeholder from '@renderer/assets/placeholder.png';
+import placeholder from '@renderer/assets/placeholder3.png';
 
 const houghSchema = z.object({
   type: z.enum(['lines', 'circles']).nullable(),
