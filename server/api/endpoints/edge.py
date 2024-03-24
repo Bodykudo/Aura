@@ -6,7 +6,7 @@ from api.services.edge_service import EdgeDetector
 
 router = APIRouter()
 
-edge_detector = ["sobel", "roberts", "prewitt", "canny"]
+edge_detector = ["sobel", "roberts", "prewitt", "canny", "canny_new"]
 sobel_detector_directions = ["x", "y", "both"]
 
 
@@ -27,7 +27,7 @@ async def apply_edge(image_id: str, edge: EdgeModel):
                 status_code=400, detail="Direction of edge doesn't exist."
             )
         else:
-            output_image = EdgeDetector.sobel_edge_detection(
+            output_image, _ = EdgeDetector.sobel_edge_detection(
                 image_path,
                 edge.kernelSize,
                 edge.direction,
@@ -38,6 +38,14 @@ async def apply_edge(image_id: str, edge: EdgeModel):
         output_image = EdgeDetector.prewitt_edge_detection(image_path, edge.kernelSize)
     elif edge.detector == "canny":
         output_image = EdgeDetector.canny_edge_detection(
+            image_path,
+            edge.kernelSize,
+            edge.sigma,
+            edge.lowerThreshold,
+            edge.upperThreshold,
+        )
+    elif edge.detector == "canny_new":
+        output_image = EdgeDetector.canny_edge_detection_new(
             image_path,
             edge.kernelSize,
             edge.sigma,

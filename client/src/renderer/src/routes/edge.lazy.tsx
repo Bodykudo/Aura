@@ -28,7 +28,7 @@ import { useToast } from '@renderer/components/ui/use-toast';
 import placeholder from '@renderer/assets/placeholder2.png';
 
 const noiseSchema = z.object({
-  type: z.enum(['sobel', 'roberts', 'prewitt', 'canny']).nullable(),
+  type: z.enum(['sobel', 'roberts', 'prewitt', 'canny', 'canny_new']).nullable(),
   direction: z.enum(['x', 'y', 'both']).nullable(),
   kernelSize: z.number(),
   sigma: z.number(),
@@ -40,7 +40,8 @@ const typesOptions = [
   { label: 'Sobel Detector', value: 'sobel' },
   { label: 'Roberts Detector', value: 'roberts' },
   { label: 'Prewitt Detector', value: 'prewitt' },
-  { label: 'Canny Detector', value: 'canny' }
+  { label: 'Canny Detector', value: 'canny' },
+  { label: 'New Canny', value: 'canny_new' }
 ];
 
 const inputs = [
@@ -71,6 +72,15 @@ const inputs = [
   },
   {
     value: 'canny',
+    inputs: [
+      { label: 'Kernel Size', name: 'kernelSize', min: 1, max: 9, step: 2 },
+      { label: 'Sigma', name: 'sigma', min: 0, max: 10, step: 0.1 },
+      { label: 'Lower Threshold', name: 'lowerThreshold', min: 1, max: 200, step: 1 },
+      { label: 'Upper Threshold', name: 'upperThreshold', min: 1, max: 200, step: 1 }
+    ]
+  },
+  {
+    value: 'canny_new',
     inputs: [
       { label: 'Kernel Size', name: 'kernelSize', min: 1, max: 9, step: 2 },
       { label: 'Sigma', name: 'sigma', min: 0, max: 10, step: 0.1 },
