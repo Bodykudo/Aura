@@ -44,11 +44,13 @@ class HoughTransform:
                     circles.append((x, y, r + min_radius))
         return circles
 
+    @staticmethod
     def draw_circles(image, circles):
         for circle in circles:
             cv2.circle(image, (circle[0], circle[1]), circle[2], (0, 255, 0), 2)
         return image
 
+    @staticmethod
     def detect_circles(image, min_radius, max_radius, threshold_value=0.8):
         accumulator = HoughTransform.calculate_accumulator(
             image, min_radius, max_radius
@@ -108,21 +110,88 @@ class HoughTransform:
         )
         result = HoughTransform.draw_lines(image,candidates_indices, rhos, thetas)
         return result
+    @staticmethod
+    def draw_ellipse(image, parameters):
+        if parameters is not None:
+            x0, y0, a, b, alpha = parameters
+            center = (int(x0), int(y0))
+            axes_length = (int(a), int(b))
+            angle_degrees = np.degrees(alpha)
+            color = (0, 255, 0)  # Green color
+            thickness = 2
+            cv2.ellipse(image, center, axes_length, angle_degrees, 0, 360, color, thickness)
+            return image
+    @staticmethod
+    def detect_ellipses(img,min_major_axis=10, threshold=10):
+        edges = cv2.Canny(img, 50, 150, apertureSize=3)
+        ellipses=HoughTransform.find_ellipse(edges,min_major_axis,threshold)
+        detected_ellipses=HoughTransform.draw_ellipse(img,ellipses)
+        return detected_ellipses
 
     @staticmethod
-    def detect_ellipses():
-        pass
+    def find_ellipse(edges, min_major_axis=10, threshold=10):
+        height, width = edges.shape
+        ys, xs = np.nonzero(edges)
+        pixels = np.column_stack((xs, ys))
+        acc = np.zeros(max(width, height) // 2)
 
+        for i in range(len(xs) - 1):
+            for j in range(len(xs), i, -1):
+                x1, y1 = pixels[i]
+                x2, y2 = pixels[j - 1]
+                d12 = np.linalg.norm([x1 - x2, y1 - y2])
+                acc.fill(0)
 
-# Testing
-image = cv2.imread("coins.jpg")
-output = HoughTransform.detect_circles(image, 60, 300, 0.8)
-cv2.imshow("Detected Circles", output)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+                if x1 != x2 and d12 > min_major_axis:
+                    x0 = (x1 + x2) / 2
+                    y0 = (y1 + y2) / 2
+                    a = d12 / 2
+                    alpha = np.arctan2((y2 - y1), (x2 - x1))
+                    # d01 = np.linalg.norm([x1 - x0, y1 - y0])
+                    # d02 = np.linalg.norm([x2 - x0, y2 - y0])
 
-image = cv2.imread("chess_board.png")
-lines_detected = HoughTransform.detect_lines(image)
-cv2.imshow("Detected Lines", lines_detected)
+                    for k in range(len(xs)):
+                        if k == i or k == j - 1:
+                            continue
+                        x3, y3 = pixels[k]
+                        d03 = np.linalg.norm([x3 - x0, y3 - y0])
+
+                        if d03 >= a:
+                            continue
+                        f = np.linalg.norm([x3 - x2, y3 - y2])
+                        cos2_tau = ((a**2 + d03**2 - f**2) / (2 * a * d03))**2
+                        sin2_tau = 1 - cos2_tau
+                        b = round(np.sqrt((a**2 * d03**2 * sin2_tau) / (a**2 - d03**2 * cos2_tau)))
+
+                        if 0 < b <= len(acc):
+                            acc[int(b - 1)] += 1
+
+                    max_votes = np.max(acc)
+                    minor_axis_index = np.argmax(acc)
+
+                    if max_votes > threshold:
+                        parameters = [x0, y0, a, minor_axis_index, alpha]
+                        return parameters
+
+        print("No ellipses detected!")
+        return None
+# # Testing
+# # image = cv2.imread("circle_test (1).jpg")
+# # output = HoughTransform.detect_circles(image, 25, 100, 0.55)
+# image = cv2.imread("circle_test (2).jpg")
+# output = HoughTransform.detect_circles(image, 50, 100, 0.55)
+# cv2.imshow("Detected Circles", output)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+# #
+# # image = cv2.imread("chess_board.png")
+# # lines_detected = HoughTransform.detect_lines(image)
+# # cv2.imshow("Detected Lines", lines_detected)
+# # cv2.waitKey(0)
+# # cv2.destroyAllWindows()
+image = cv2.imread("lpAMs.png")
+print(image.shape)
+ellipses_detected = HoughTransform.detect_ellipses(image,167)
+cv2.imshow("Detected Ellipses", ellipses_detected)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
