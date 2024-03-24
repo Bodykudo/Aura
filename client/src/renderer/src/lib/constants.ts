@@ -57,12 +57,12 @@ export const routes = [
     bgColor: 'bg-blue-700/10'
   },
   {
-    label: 'Feature Extraction',
+    label: 'Object Detection (Hough Transform)',
     icon: Wand2,
     href: '/hough',
     color: 'text-amber-500',
-    bgColor: 'bg-amber-500/10',
-    comingSoon: true
+    bgColor: 'bg-amber-500/10'
+    // comingSoon: true
   },
   {
     label: 'Active Contours',

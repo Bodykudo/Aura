@@ -1,7 +1,16 @@
 import os
 from fastapi import FastAPI
 
-from api.endpoints import upload, filter, noise, hybrid, thresholding, edge, histogram
+from api.endpoints import (
+    upload,
+    filter,
+    noise,
+    hybrid,
+    thresholding,
+    edge,
+    histogram,
+    hough,
+)
 from api.config import uploads_folder
 
 
@@ -19,10 +28,11 @@ async def startup_event():
 
 app.add_event_handler("startup", startup_event)
 
-app.include_router(upload.router)
-app.include_router(filter.router)
-app.include_router(noise.router)
-app.include_router(hybrid.router)
-app.include_router(thresholding.router)
-app.include_router(edge.router)
-app.include_router(histogram.router)
+app.include_router(upload.router, prefix="/api")
+app.include_router(filter.router, prefix="/api")
+app.include_router(noise.router, prefix="/api")
+app.include_router(hybrid.router, prefix="/api")
+app.include_router(thresholding.router, prefix="/api")
+app.include_router(edge.router, prefix="/api")
+app.include_router(histogram.router, prefix="/api")
+app.include_router(hough.router, prefix="/api")

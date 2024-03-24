@@ -31,7 +31,7 @@ const thresholdingSchema = z.object({
   type: z.enum(['local', 'global']).nullable(),
   threshold: z.number(),
   thresholdMargin: z.number(),
-  blockSize: z.number(),
+  blockSize: z.number()
 });
 
 const thresholdingOptions = [
@@ -43,8 +43,9 @@ const inputs = [
   {
     value: 'local',
     inputs: [
-    {label: 'Thresholding Margin', name: 'thresholdMargin', min: 0, max: 255, step: 1},
-      { label: 'Block Size', name: 'blockSize', min: 1, max: 13, step: 2 }]
+      { label: 'Thresholding Margin', name: 'thresholdMargin', min: 0, max: 255, step: 1 },
+      { label: 'Block Size', name: 'blockSize', min: 1, max: 13, step: 2 }
+    ]
   },
   {
     value: 'global',
@@ -69,7 +70,7 @@ function Thresholding() {
     defaultValues: {
       threshold: 127,
       thresholdMargin: 7,
-      blockSize: 11,
+      blockSize: 11
     }
   });
 
@@ -117,7 +118,7 @@ function Thresholding() {
       type: data.type,
       threshold: data.threshold,
       thresholdMargin: data.thresholdMargin,
-      blockSize: data.blockSize,
+      blockSize: data.blockSize
     };
 
     setIsProcessing(true);
@@ -213,7 +214,7 @@ function Thresholding() {
           <Dropzone index={0} />
           <OutputImage index={0} placeholder={placeholder} />
         </div>
-      </div>{' '}
+      </div>
     </div>
   );
 }
