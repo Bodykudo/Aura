@@ -30,18 +30,19 @@ import { useToast } from '@renderer/components/ui/use-toast';
 import placeholder from '@renderer/assets/placeholder3.png';
 
 const houghSchema = z.object({
-  type: z.enum(['lines', 'circles']).nullable(),
+  type: z.enum(['lines', 'circles','ellipses']).nullable(),
   rho: z.number(),
   theta: z.number(),
   threshold: z.number(),
   minRadius: z.number(),
   maxRadius: z.number(),
-  color: z.string()
+  color: z.string(),
+  minMajoraxis: z.number()
 });
 
 const houghOptions = [
   { label: 'Lines Detection', value: 'lines' },
-  { label: 'Circles Detection', value: 'circles' }
+  { label: 'Circles Detection', value: 'circles' },{ label: 'Ellipses Detection', value: 'ellipses' }
 ];
 
 const inputs = [
@@ -60,7 +61,15 @@ const inputs = [
       { label: 'Min Radius', name: 'minRadius', min: 0, max: 255, step: 1 },
       { label: 'Max Radius', name: 'maxRadius', min: 0, max: 512, step: 1 }
     ]
+  },
+  {
+    value: 'ellipses',
+    inputs: [
+      { label: 'Threshold', name: 'threshold', min: 0, max: 100, step: 1 },
+      { label: 'Min Major Axis', name: 'minMajoraxis', min: 0, max: 255, step: 1 }
+    ]
   }
+
 ];
 
 function Hough() {
@@ -84,7 +93,8 @@ function Hough() {
       threshold: 100,
       minRadius: 50,
       maxRadius: 300,
-      color: '#ff0023'
+      color: '#ff0023',
+      minMajoraxis:100
     }
   });
 
@@ -135,7 +145,8 @@ function Hough() {
       theta: data.theta,
       minRadius: data.minRadius,
       maxRadius: data.maxRadius,
-      color: data.color
+      color: data.color,
+      minMajoraxis: data.minMajoraxis
     };
 
     setIsProcessing(true);
