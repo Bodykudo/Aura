@@ -62,15 +62,13 @@ export const routes = [
     href: '/hough',
     color: 'text-amber-500',
     bgColor: 'bg-amber-500/10'
-    // comingSoon: true
   },
   {
     label: 'Active Contours',
     icon: CircleDotDashed,
     href: '/contours',
     color: 'text-cyan-700',
-    bgColor: 'bg-cyan-700/10',
-    comingSoon: true
+    bgColor: 'bg-cyan-700/10'
   },
   {
     label: 'Corner Detection',
