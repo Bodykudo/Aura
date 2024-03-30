@@ -79,7 +79,11 @@ def gaussian_blur(image, kernel_size, sigma):
 class EdgeDetector:
     @staticmethod
     def sobel_edge_detection(image, gaussian_ksize, sigma, direction="both"):
-        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        if len(image.shape) == 2:
+            gray_image = image
+        else:
+            # Convert the image to grayscale
+            gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         gray_image = gaussian_blur(gray_image, gaussian_ksize, 1.0)
         sobel_x_kernel = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
 
