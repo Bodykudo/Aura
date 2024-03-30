@@ -26,33 +26,31 @@ def non_maximum_suppression(image, angles):
     return suppressed
 
 
-def double_threshold_hysteresis(image, low, high):
+def double_threshold_hysteresis(image, low_threshold, high_threshold):
     weak = 50
     strong = 255
-    size = image.shape
-    result = np.zeros(size)
-    weak_x, weak_y = np.where((image > low) & (image <= high))
-    strong_x, strong_y = np.where(image >= high)
-    result[strong_x, strong_y] = strong
-    result[weak_x, weak_y] = weak
+    rows, cols = image.shape
+    result = np.zeros_like(image)
+    # Thresholding
+    weak_indices = np.where((image > low_threshold) & (image <= high_threshold))
+    strong_indices = np.where(image >= high_threshold)
+    result[weak_indices] = weak
+    result[strong_indices] = strong
+    # Edge tracking by hysteresis
     dx = np.array((-1, -1, 0, 1, 1, 1, 0, -1))
     dy = np.array((0, 1, 1, 1, 0, -1, -1, -1))
-    size = image.shape
 
-    while len(strong_x):
-        x = strong_x[0]
-        y = strong_y[0]
-        strong_x = np.delete(strong_x, 0)
-        strong_y = np.delete(strong_y, 0)
+    while len(strong_indices[0]):
+        x = strong_indices[0][0]
+        y = strong_indices[1][0]
+        strong_indices = (np.delete(strong_indices[0], 0), np.delete(strong_indices[1], 0))
         for direction in range(len(dx)):
             new_x = x + dx[direction]
             new_y = y + dy[direction]
-            if (new_x >= 0 & new_x < size[0] & new_y >= 0 & new_y < size[1]) and (
-                result[new_x, new_y] == weak
-            ):
+            if 0 <= new_x < rows and 0 <= new_y < cols and result[new_x, new_y] == weak:
                 result[new_x, new_y] = strong
-                np.append(strong_x, new_x)
-                np.append(strong_y, new_y)
+                strong_indices = (np.append(strong_indices[0], new_x), np.append(strong_indices[1], new_y))
+
     result[result != strong] = 0
     return result
 
