@@ -43,13 +43,19 @@ def double_threshold_hysteresis(image, low_threshold, high_threshold):
     while len(strong_indices[0]):
         x = strong_indices[0][0]
         y = strong_indices[1][0]
-        strong_indices = (np.delete(strong_indices[0], 0), np.delete(strong_indices[1], 0))
+        strong_indices = (
+            np.delete(strong_indices[0], 0),
+            np.delete(strong_indices[1], 0),
+        )
         for direction in range(len(dx)):
             new_x = x + dx[direction]
             new_y = y + dy[direction]
             if 0 <= new_x < rows and 0 <= new_y < cols and result[new_x, new_y] == weak:
                 result[new_x, new_y] = strong
-                strong_indices = (np.append(strong_indices[0], new_x), np.append(strong_indices[1], new_y))
+                strong_indices = (
+                    np.append(strong_indices[0], new_x),
+                    np.append(strong_indices[1], new_y),
+                )
 
     result[result != strong] = 0
     return result
@@ -133,22 +139,6 @@ class EdgeDetector:
 
     @staticmethod
     def canny_edge_detection(
-        image_path: str,
-        kernel_size: int,
-        sigma: float,
-        low_threshold: int,
-        high_threshold: int,
-    ):
-        if low_threshold > high_threshold:
-            raise ValueError("Low threshold should be less than high threshold.")
-
-        image = read_image(image_path, grayscale=True)
-        image = cv2.GaussianBlur(image, (kernel_size, kernel_size), sigma)
-        edges = cv2.Canny(image, low_threshold, high_threshold)
-        return edges
-
-    @staticmethod
-    def canny_edge_detection_new(
         image_path: str,
         kernel_size: int,
         sigma: float,

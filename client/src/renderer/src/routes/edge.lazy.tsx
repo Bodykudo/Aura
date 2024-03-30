@@ -40,8 +40,7 @@ const typesOptions = [
   { label: 'Sobel Detector', value: 'sobel' },
   { label: 'Roberts Detector', value: 'roberts' },
   { label: 'Prewitt Detector', value: 'prewitt' },
-  { label: 'Canny Detector', value: 'canny' },
-  { label: 'New Canny', value: 'canny_new' }
+  { label: 'Canny Detector', value: 'canny' }
 ];
 
 const inputs = [

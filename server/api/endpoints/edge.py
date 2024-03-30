@@ -44,14 +44,6 @@ async def apply_edge(image_id: str, edge: EdgeModel):
             edge.lowerThreshold,
             edge.upperThreshold,
         )
-    elif edge.detector == "canny_new":
-        output_image = EdgeDetector.canny_edge_detection_new(
-            image_path,
-            edge.kernelSize,
-            edge.sigma,
-            edge.lowerThreshold,
-            edge.upperThreshold,
-        )
 
     output_image = convert_image(output_image)
 
