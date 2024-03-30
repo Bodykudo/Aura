@@ -8,7 +8,7 @@ class Hough:
     @staticmethod
     def calculate_accumulator(image, min_radius, max_radius):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        edges=EdgeDetector.canny_edge_detection(image,3,1,0,50)
+        edges = cv2.Canny(image, 50, 150, apertureSize=3)
         height, width = edges.shape
         accumulator = np.zeros(
             (height, width, max_radius - min_radius + 1), dtype=np.uint16
@@ -101,18 +101,20 @@ class Hough:
             y1 = int(y0 + 1000 * (a))
             x2 = int(x0 - 1000 * (-b))
             y2 = int(y0 - 1000 * (a))
-            cv2.line(image, (x1, y1), (x2, y2), color, 2)
+            cv2.line(image, (x1, y1), (x2, y2), color, 5)
         return image
 
     @staticmethod
-    def detect_lines(image, rho=1, theta=np.pi / 180, threshold=100):
+    def detect_lines(
+        image_path, rho=1, theta=np.pi / 180, threshold=100, color=(0, 0, 255)
+    ):
+        image = read_image(image_path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        edges = EdgeDetector.canny_edge_detection(gray, 3, 1, 0, 50)
-        # edges = cv2.Canny(gray, 50, 150, apertureSize=3)
-        candidates_indices, rhos, thetas = HoughTransform.find_lines(
+        edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+        candidates_indices, rhos, thetas = Hough.find_lines(
             edges, rho, theta, threshold
         )
-        result = HoughTransform.draw_lines(image,candidates_indices, rhos, thetas)
+        result = Hough.draw_lines(image, candidates_indices, rhos, thetas, color)
         return result
 
     @staticmethod
