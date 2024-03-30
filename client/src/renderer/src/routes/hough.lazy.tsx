@@ -31,7 +31,6 @@ import placeholder from '@renderer/assets/placeholder3.png';
 
 const houghSchema = z.object({
   type: z.enum(['lines', 'circles', 'ellipses']).nullable(),
-  rho: z.number(),
   theta: z.number(),
   threshold: z.number(),
   minRadius: z.number(),
@@ -50,7 +49,6 @@ const inputs = [
   {
     value: 'lines',
     inputs: [
-      { label: 'Rho', name: 'rho', min: 1, max: 10, step: 1 },
       { label: 'Theta', name: 'theta', min: 1, max: 360, step: 1 },
       { label: 'Threshold', name: 'threshold', min: 1, max: 100, step: 1 }
     ]
@@ -88,7 +86,6 @@ function Hough() {
     resolver: zodResolver(houghSchema),
     defaultValues: {
       type: null,
-      rho: 1,
       theta: 180,
       threshold: 100,
       minRadius: 50,
@@ -141,7 +138,6 @@ function Hough() {
     const body = {
       type: data.type,
       threshold: data.threshold,
-      rho: data.rho,
       theta: data.theta,
       minRadius: data.minRadius,
       maxRadius: data.maxRadius,

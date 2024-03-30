@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 class HoughModel(BaseModel):
     type: str
-    rho: float
     theta: int
     threshold: int
     minRadius: int
