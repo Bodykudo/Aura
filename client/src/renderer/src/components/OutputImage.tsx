@@ -9,9 +9,10 @@ import { useEffect, useState } from 'react';
 interface OutputImageProps {
   index: number;
   placeholder?: string;
+  extra?: string;
 }
 
-export default function OutputImage({ index, placeholder }: OutputImageProps) {
+export default function OutputImage({ index, placeholder, extra }: OutputImageProps) {
   const { processedImagesURLs, isProcessing } = useGlobalState();
   const [progressValue, setProgressValue] = useState(0);
 
@@ -74,6 +75,7 @@ export default function OutputImage({ index, placeholder }: OutputImageProps) {
           <Download className="mr-2 w-5 h-5" />
           Download
         </Button>
+        {extra && <span>{extra}</span>}
         {isProcessing && <Progress className="max-w-[250px] h-2" value={progressValue} />}
       </div>
     </div>

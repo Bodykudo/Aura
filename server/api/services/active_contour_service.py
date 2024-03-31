@@ -107,6 +107,16 @@ class ActiveContourService:
         return perimeter
 
     @staticmethod
+    def calculate_contour_area(curve):
+        area = 0
+        num_points = len(curve)
+        for i in range(num_points):
+            x1, y1 = curve[i]
+            x2, y2 = curve[(i + 1) % num_points]
+            area += x1 * y2 - x2 * y1
+        return abs(area) / 2
+
+    @staticmethod
     def active_contour(
         image_path,
         center,
@@ -130,43 +140,6 @@ class ActiveContourService:
 
         output = ActiveContourService.draw_contours(image, curve)
         perimeter = ActiveContourService.calculate_contour_perimeter(curve)
+        area = ActiveContourService.calculate_contour_area(curve)
 
-        return output, perimeter
-
-
-# input_image = cv2.imread("tofaha.jpeg")
-# output_image = input_image.copy()
-
-# # Draw circle on the original image
-# circle_center = (124, 101)  # Example center
-# circle_radius = 120  # Example radius
-# cv2.circle(output_image, circle_center, circle_radius, (0, 255, 0), 2)
-
-# cv2.imshow("Original Image with Circle", output_image)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-
-# num_iterations = 300
-# num_points = 70
-# window_size = 11
-# alpha = 10
-# beta = 3
-# gamma = 1
-
-# output_image, perimter = ActiveContourService.active_contour(
-#     input_image,
-#     circle_center,
-#     circle_radius,
-#     num_iterations,
-#     num_points,
-#     window_size,
-#     alpha,
-#     beta,
-#     gamma,
-# )
-
-
-# cv2.imshow("Output Image", output_image)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-# print(f"Perimeter: {perimter}")
+        return output, perimeter, area

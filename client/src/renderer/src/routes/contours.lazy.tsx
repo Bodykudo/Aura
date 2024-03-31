@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -53,6 +53,9 @@ function Contours() {
     uploadedImagesURLs
   } = useGlobalState();
 
+  const [perimeter, setPerimeter] = useState<number | null>(null);
+  const [area, setArea] = useState<number | null>(null);
+
   const form = useForm({
     resolver: zodResolver(contoursSchema),
     defaultValues: {
@@ -85,6 +88,14 @@ function Contours() {
     const imageReceivedListener = (event: any) => {
       if (event.data.image) {
         setProcessedImageURL(0, event.data.image);
+      }
+      if (event.data.perimeter) {
+        const outputPerimeter: number = event.data.perimeter;
+        setPerimeter(outputPerimeter);
+      }
+      if (event.data.area) {
+        const outputArea: number = event.data.area;
+        setArea(outputArea);
       }
       setIsProcessing(false);
     };
@@ -124,6 +135,8 @@ function Contours() {
       gamma: data.gamma
     };
 
+    setPerimeter(null);
+    setArea(null);
     setIsProcessing(true);
     ipcRenderer.send('process:image', {
       body,
@@ -191,7 +204,15 @@ function Contours() {
           ) : (
             <Dropzone index={0} />
           )}
-          <OutputImage index={0} placeholder={placeholder} />
+          <OutputImage
+            index={0}
+            extra={
+              perimeter && area
+                ? `Perimeter: ${perimeter.toFixed(2)}, Area: ${area.toFixed(2)}`
+                : undefined
+            }
+            placeholder={placeholder}
+          />
         </div>
       </div>
     </div>

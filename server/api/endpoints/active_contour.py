@@ -16,7 +16,7 @@ async def apply_active_contour(image_id: str, contour: ActiveContourModel):
 
     output_image = None
     center = (int(contour.centerX), int(contour.centerY))
-    output_image, perimeter = ActiveContourService.active_contour(
+    output_image, perimeter, area = ActiveContourService.active_contour(
         image_path,
         center,
         int(contour.radius),
@@ -34,4 +34,5 @@ async def apply_active_contour(image_id: str, contour: ActiveContourModel):
         "message": "Active contour applied successfully.",
         "image": output_image,
         "perimeter": perimeter,
+        "area": area,
     }
