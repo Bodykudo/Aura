@@ -142,7 +142,7 @@ function Hough() {
       minRadius: data.minRadius,
       maxRadius: data.maxRadius,
       color: data.color,
-      minMajoraxis: data.minMajoraxis
+      minMajorAxis: data.minMajoraxis
     };
 
     setIsProcessing(true);

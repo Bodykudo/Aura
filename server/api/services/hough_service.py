@@ -185,7 +185,6 @@ class Hough:
             center = (int(x0), int(y0))
             axes_length = (int(a), int(b))
             angle_degrees = np.degrees(alpha)
-            color = (0, 255, 0)  # Green color
             thickness = 2
             cv2.ellipse(
                 image, center, axes_length, angle_degrees, 0, 360, color, thickness
