@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 
 from api.utils import read_image
+from .edge_service import EdgeDetector
 
 
 class Hough:
@@ -118,5 +119,75 @@ class Hough:
         return result
 
     @staticmethod
-    def detect_ellipses():
-        pass
+    def find_ellipse(edges, min_major_axis=10, threshold=10):
+        height, width = edges.shape
+        ys, xs = np.nonzero(edges)
+        pixels = np.column_stack((xs, ys))
+        acc = np.zeros(max(width, height) // 2)
+
+        for i in range(len(xs) - 1):
+            for j in range(len(xs), i, -1):
+                x1, y1 = pixels[i]
+                x2, y2 = pixels[j - 1]
+                d12 = np.linalg.norm([x1 - x2, y1 - y2])
+                acc.fill(0)
+
+                if x1 != x2 and d12 > min_major_axis:
+                    x0 = (x1 + x2) / 2
+                    y0 = (y1 + y2) / 2
+                    a = d12 / 2
+                    alpha = np.arctan2((y2 - y1), (x2 - x1))
+                    # d01 = np.linalg.norm([x1 - x0, y1 - y0])
+                    # d02 = np.linalg.norm([x2 - x0, y2 - y0])
+
+                    for k in range(len(xs)):
+                        if k == i or k == j - 1:
+                            continue
+                        x3, y3 = pixels[k]
+                        d03 = np.linalg.norm([x3 - x0, y3 - y0])
+
+                        if d03 >= a:
+                            continue
+                        f = np.linalg.norm([x3 - x2, y3 - y2])
+                        cos2_tau = ((a**2 + d03**2 - f**2) / (2 * a * d03)) ** 2
+                        sin2_tau = 1 - cos2_tau
+                        b = round(
+                            np.sqrt(
+                                (a**2 * d03**2 * sin2_tau) / (a**2 - d03**2 * cos2_tau)
+                            )
+                        )
+
+                        if 0 < b <= len(acc):
+                            acc[int(b - 1)] += 1
+
+                    max_votes = np.max(acc)
+                    minor_axis_index = np.argmax(acc)
+
+                    if max_votes > threshold:
+                        parameters = [x0, y0, a, minor_axis_index, alpha]
+                        return parameters
+
+        print("No ellipses detected!")
+        return None
+
+    @staticmethod
+    def detect_ellipses(image_path, min_major_axis=10, threshold=10, color=(0, 0, 255)):
+        image = read_image(image_path)
+        edges = EdgeDetector.canny_edge_detection(image_path, 3, 1, 0, 50)
+        ellipses = Hough.find_ellipse(edges, min_major_axis, threshold)
+        detected_ellipses = Hough.draw_ellipse(image, ellipses, color)
+        return detected_ellipses
+
+    @staticmethod
+    def draw_ellipse(image, parameters, color):
+        if parameters is not None:
+            x0, y0, a, b, alpha = parameters
+            center = (int(x0), int(y0))
+            axes_length = (int(a), int(b))
+            angle_degrees = np.degrees(alpha)
+            color = (0, 255, 0)  # Green color
+            thickness = 2
+            cv2.ellipse(
+                image, center, axes_length, angle_degrees, 0, 360, color, thickness
+            )
+            return image

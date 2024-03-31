@@ -8,3 +8,4 @@ class HoughModel(BaseModel):
     minRadius: int
     maxRadius: int
     color: str
+    minMajorAxis: int

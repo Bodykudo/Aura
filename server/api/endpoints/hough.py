@@ -8,7 +8,7 @@ import numpy as np
 
 router = APIRouter()
 
-hough_types = ["lines", "circles"]
+hough_types = ["lines", "circles", "ellipses"]
 
 
 @router.post("/hough/{image_id}")
@@ -36,6 +36,13 @@ async def apply_hough_transform(image_id: str, hough: HoughModel):
             image_path,
             min_radius=hough.minRadius,
             max_radius=hough.maxRadius,
+            threshold=hough.threshold,
+            color=color,
+        )
+    elif hough.type == "ellipses":
+        output_image = Hough.detect_ellipses(
+            image_path,
+            min_major_axis=hough.minMajorAxis,
             threshold=hough.threshold,
             color=color,
         )
