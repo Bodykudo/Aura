@@ -4,7 +4,7 @@ import cv2
 from api.utils import read_image
 
 
-class ActiveContourService:
+class ActiveContour:
     @staticmethod
     def calculate_internal_energy(point, previous_point, next_point, alpha):
         dx1 = point[0] - previous_point[0]
@@ -31,13 +31,11 @@ class ActiveContourService:
     def calculate_point_energy(
         image, point, prev_point, next_point, alpha, beta, gamma
     ):
-        internal_energy = ActiveContourService.calculate_internal_energy(
+        internal_energy = ActiveContour.calculate_internal_energy(
             point, prev_point, next_point, alpha
         )
-        external_energy = ActiveContourService.calculate_external_energy(
-            image, point, beta
-        )
-        gradients = ActiveContourService.calculate_gradients(point, prev_point, gamma)
+        external_energy = ActiveContour.calculate_external_energy(image, point, beta)
+        gradients = ActiveContour.calculate_gradients(point, prev_point, gamma)
         return internal_energy + external_energy + gradients
 
     @staticmethod
@@ -56,7 +54,7 @@ class ActiveContourService:
             for dx in range(-window_index, window_index + 1):
                 for dy in range(-window_index, window_index + 1):
                     move_pt = (pt[0] + dx, pt[1] + dy)
-                    energy = ActiveContourService.calculate_point_energy(
+                    energy = ActiveContour.calculate_point_energy(
                         image, move_pt, prev_pt, next_pt, alpha, beta, gamma
                     )
                     if energy < min_energy:
@@ -103,7 +101,7 @@ class ActiveContourService:
         for i in range(num_points):
             point1 = curve[i]
             point2 = curve[(i + 1) % num_points]
-            perimeter += ActiveContourService.calculate_distance(point1, point2)
+            perimeter += ActiveContour.calculate_distance(point1, point2)
         return perimeter
 
     @staticmethod
@@ -130,16 +128,16 @@ class ActiveContourService:
     ):
         image = read_image(image_path)
 
-        curve = ActiveContourService.initialize_contours(center, radius, num_points)
+        curve = ActiveContour.initialize_contours(center, radius, num_points)
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         for _ in range(num_iterations):
-            curve = ActiveContourService.snake_operation(
+            curve = ActiveContour.snake_operation(
                 gray_image, curve, window_size, alpha, beta, gamma
             )
 
-        output = ActiveContourService.draw_contours(image, curve)
-        perimeter = ActiveContourService.calculate_contour_perimeter(curve)
-        area = ActiveContourService.calculate_contour_area(curve)
+        output = ActiveContour.draw_contours(image, curve)
+        perimeter = ActiveContour.calculate_contour_perimeter(curve)
+        area = ActiveContour.calculate_contour_area(curve)
 
         return output, perimeter, area
