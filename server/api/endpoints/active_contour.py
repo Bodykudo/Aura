@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from api.schemas.active_contour_model import ActiveContourModel
-from api.services.active_contour_service import ActiveContourService
+from api.services.active_contour_service import ActiveContour
 from api.utils import convert_image, get_image
 
 router = APIRouter()
@@ -16,7 +16,7 @@ async def apply_active_contour(image_id: str, contour: ActiveContourModel):
 
     output_image = None
     center = (int(contour.centerX), int(contour.centerY))
-    output_image, perimeter, area = ActiveContourService.active_contour(
+    output_image, perimeter, area = ActiveContour.active_contour(
         image_path,
         center,
         int(contour.radius),
