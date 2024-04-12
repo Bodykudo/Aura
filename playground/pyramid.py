@@ -93,7 +93,7 @@ def generate_DoG_pyramid(gaussian_pyramid):
 
 
 # Testing
-image_path = r"D:\Raghda\3rd Year\2nd Term\CV\Aura\playground\killua.jpg"
+image_path = r"C:\College\3rd Year\Second Term\Computer Vision\Aura\playground\face.JPEG"
 image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
 gaussian_pyramid = build_scale_space_pyramid(image)
@@ -101,25 +101,102 @@ gaussian_pyramid = build_scale_space_pyramid(image)
 # Generate the Difference-of-Gaussian (DoG) pyramid
 DoG_pyramid = generate_DoG_pyramid(gaussian_pyramid)
 
-# Display all levels of the pyramid (optional)
-for octave_level, octave in enumerate(gaussian_pyramid):
-    for scale_level, image_level in enumerate(octave):
-        print(f"Octave {octave_level + 1}, Scale level {scale_level + 1}:")
-        print(f"  Resolution: {image_level.shape[1]}x{image_level.shape[0]}")
-        print(f"  Scale: {1.6 * (2 ** scale_level)}\n")
-        cv2.imshow(f"Octave {octave_level + 1}, Scale {scale_level + 1}", image_level)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+# # Display all levels of the pyramid (optional)
+# for octave_level, octave in enumerate(gaussian_pyramid):
+#     for scale_level, image_level in enumerate(octave):
+#         print(f"Octave {octave_level + 1}, Scale level {scale_level + 1}:")
+#         print(f"  Resolution: {image_level.shape[1]}x{image_level.shape[0]}")
+#         print(f"  Scale: {1.6 * (2 ** scale_level)}\n")
+#         cv2.imshow(f"Octave {octave_level + 1}, Scale {scale_level + 1}", image_level)
+#         cv2.waitKey(0)
+#         cv2.destroyAllWindows()
 
-# Display all levels of the DoG pyramid (optional)
-for octave_level, octave in enumerate(DoG_pyramid):
-    for scale_level, image_level in enumerate(octave):
-        print(f"Octave {octave_level + 1}, Scale level {scale_level + 1}:")
-        print(f"  Resolution: {image_level.shape[1]}x{image_level.shape[0]}")
-        cv2.imshow(
-            f"DoG Octave {octave_level + 1}, Scale {scale_level + 1}", image_level
-        )
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+# # Display all levels of the DoG pyramid (optional)
+# for octave_level, octave in enumerate(DoG_pyramid):
+#     for scale_level, image_level in enumerate(octave):
+#         print(f"Octave {octave_level + 1}, Scale level {scale_level + 1}:")
+#         print(f"  Resolution: {image_level.shape[1]}x{image_level.shape[0]}")
+#         cv2.imshow(
+#             f"DoG Octave {octave_level + 1}, Scale {scale_level + 1}", image_level
+#         )
+#         cv2.waitKey(0)
+#         cv2.destroyAllWindows()
 
-print("Scale-space pyramid and DoG pyramid generation complete!")
+# print("Scale-space pyramid and DoG pyramid generation complete!")
+
+
+def detect_keypoints(DoG_pyramid, threshold):
+    keypoints = []
+    for octave, octave_images in enumerate(DoG_pyramid):
+        for scale, img in enumerate(octave_images[1:-1]):  
+            prev_img = octave_images[scale]
+            next_img = octave_images[scale + 2]
+            keypoints.extend(detect_keypoints_in_image(img, prev_img, next_img, threshold))
+    return keypoints
+
+def is_local_extremum(center, upper, lower):
+    center_val = center[1, 1]
+    if center_val > np.max(upper) or center_val < np.min(lower):
+        return True
+    if center_val < np.max(upper) or center_val > np.min(lower):
+        return False
+
+def is_edge_point(img, i, j, edge_threshold=10):
+    # Calculate gradient in x and y direction using Sobel operator
+    dx = img[i+1, j] - img[i-1, j]
+    dy = img[i, j+1] - img[i, j-1]
+    
+    # Calculate gradient magnitude
+    gradient_magnitude = np.sqrt(dx**2 + dy**2)
+    
+    # If the gradient magnitude is below the threshold, it's considered an edge point
+    if gradient_magnitude > edge_threshold:
+        return False
+    else:
+        return True
+
+
+def detect_keypoints_in_image(img, prev_img, next_img, threshold):
+    keypoints = []
+    for i in range(1, img.shape[0] - 1):
+        for j in range(1, img.shape[1] - 1):
+            if is_local_extremum(img[i-1:i+2, j-1:j+2], prev_img[i-1:i+2, j-1:j+2], next_img[i-1:i+2, j-1:j+2]):
+                # Check for low contrast
+                center_val = img[i, j]
+                if abs(center_val) < threshold:
+                    continue
+                
+                # Check for proximity to edge
+                if is_edge_point(img, i, j):
+                    continue
+                
+                keypoints.append((i, j))
+    return keypoints
+
+
+#we will eliminate the keypoints that have low contrast or lie very close to the edge
+
+
+
+# Testing
+image_path = r"C:\College\3rd Year\Second Term\Computer Vision\Aura\playground\face.JPEG"
+image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+
+gaussian_pyramid = build_scale_space_pyramid(image)
+DoG_pyramid = generate_DoG_pyramid(gaussian_pyramid)
+
+# Define threshold for keypoint response
+threshold = 100
+
+# Detect keypoints
+keypoints = detect_keypoints(DoG_pyramid, threshold)
+
+# Visualize keypoints 
+keypoint_image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+for idx, point in enumerate(keypoints):
+    color = (idx * 10 % 256, idx * 20 % 256, idx * 30 % 256)
+    cv2.circle(keypoint_image, (point[1], point[0]), 3, color, 1) 
+
+cv2.imshow("Keypoints", keypoint_image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
