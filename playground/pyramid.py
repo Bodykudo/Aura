@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def build_scale_space_pyramid(
@@ -93,7 +94,7 @@ def generate_DoG_pyramid(gaussian_pyramid):
 
 
 # Testing
-image_path = r"C:\College\3rd Year\Second Term\Computer Vision\Aura\playground\face.JPEG"
+image_path = 'cat.png'
 image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
 gaussian_pyramid = build_scale_space_pyramid(image)
@@ -173,30 +174,81 @@ def detect_keypoints_in_image(img, prev_img, next_img, threshold):
                 keypoints.append((i, j))
     return keypoints
 
+def compute_gradients(image):
+    kernel_x = np.array([[-1, 0, 1],
+                         [-2, 0, 2],
+                         [-1, 0, 1]])
+    kernel_y = np.array([[-1, -2, -1],
+                         [0, 0, 0],
+                         [1, 2, 1]])
+    dx = cv2.filter2D(image, -1, kernel_x)
+    dy = cv2.filter2D(image, -1, kernel_y)
+    magnitude = np.sqrt(dx**2 + dy**2)
+    angle = np.arctan2(dy, dx) * (180 / np.pi)
+    angle[angle < 0] += 360
+    return magnitude, angle
+
+def assign_orientation(keypoints, gradients):
+    histograms = []
+    keypoints_with_orientation=[]
+    for kp in keypoints:
+        x, y = kp
+        hist = np.zeros((36,))
+        for i in range(-8, 9):
+            for j in range(-8, 9):
+                if x + i < 0 or x + i >= gradients.shape[0] or y + j < 0 or y + j >= gradients.shape[1]:
+                    continue
+                magnitude, angle = gradients[x + i, y + j]
+                weight = gaussian_weight(i, j)
+                hist[int(angle / 10)] += magnitude * weight
+        kp_angle = interpolate_peak(hist)
+        histograms.append(hist)
+        kp_oriented = kp + (kp_angle,)
+        keypoints_with_orientation.append(kp_oriented)
+    return histograms,keypoints_with_orientation
+def gaussian_weight(x, y, sigma=1.5):
+    return np.exp(-(x**2 + y**2) / (2 * sigma**2))
+
+def interpolate_peak(hist):
+    smoothed_hist = np.zeros_like(hist)
+    smoothed_hist[1:-1] = (hist[:-2] + hist[1:-1] + hist[2:]) / 3
+    smoothed_hist[0] = (hist[0] + hist[-1] + hist[1]) / 3
+    smoothed_hist[-1] = (hist[-1] + hist[-2] + hist[0]) / 3
+    peaks = np.where((smoothed_hist[:-2] < smoothed_hist[1:-1]) & (smoothed_hist[1:-1] > smoothed_hist[2:]))[0] + 1
+    if len(peaks) == 0:
+        return 0
+    return peaks[np.argmax(hist[peaks])]
+
+
+
+
 
 #we will eliminate the keypoints that have low contrast or lie very close to the edge
 
 
 
 # Testing
-image_path = r"C:\College\3rd Year\Second Term\Computer Vision\Aura\playground\face.JPEG"
-image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+
+image = cv2.imread('cat.png', cv2.IMREAD_GRAYSCALE)
+
+magnitude, angle = compute_gradients(image)
 
 gaussian_pyramid = build_scale_space_pyramid(image)
 DoG_pyramid = generate_DoG_pyramid(gaussian_pyramid)
 
 # Define threshold for keypoint response
 threshold = 100
-
+#
 # Detect keypoints
 keypoints = detect_keypoints(DoG_pyramid, threshold)
+print(len(keypoints))
 
-# Visualize keypoints 
-keypoint_image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-for idx, point in enumerate(keypoints):
-    color = (idx * 10 % 256, idx * 20 % 256, idx * 30 % 256)
-    cv2.circle(keypoint_image, (point[1], point[0]), 3, color, 1) 
+histograms,bebo = assign_orientation(keypoints, np.dstack((magnitude, angle)))
 
-cv2.imshow("Keypoints", keypoint_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+
+# Visualize the histogram for the first keypoint
+plt.bar(np.arange(0, 360, 10), histograms[0], width=10, align='center')
+plt.xlabel('Orientation (degrees)')
+plt.ylabel('Magnitude')
+plt.title('Gradient Orientation Histogram')
+plt.show()
