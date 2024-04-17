@@ -1,9 +1,10 @@
 import cv2
+from functools import cmp_to_key
 import numpy as np
 
 
 def build_scale_space_pyramid(
-    image, num_octaves=3, num_scales=5, sigma=1.6, downsampling_factor=2
+    image, num_octaves=1, num_scales=5, sigma=1.6, downsampling_factor=2
 ):
     """
     Constructs a scale-space pyramid representation of a grayscale image.
@@ -124,17 +125,15 @@ DoG_pyramid = generate_DoG_pyramid(gaussian_pyramid)
 
 # print("Scale-space pyramid and DoG pyramid generation complete!")
 
-
 def detect_keypoints(DoG_pyramid, threshold, edge_threshold=0.03):
     keypoints = []
     for octave, octave_images in enumerate(DoG_pyramid):
         for scale, img in enumerate(octave_images[1:-1]):  
             prev_img = octave_images[scale]
             next_img = octave_images[scale + 2]
-            keypoints.extend(detect_keypoints_in_image(img, prev_img, next_img, threshold, edge_threshold,0))
+            keypoints.extend(detect_keypoints_in_image(img, prev_img, next_img, threshold, edge_threshold, 10))
     return keypoints
 
-import numpy as np
 
 def is_local_extremum(center, same_picture_neighbors, adjacent_picture_neighbors):
     center_val = center[1, 1]
@@ -170,8 +169,8 @@ def detect_keypoints_in_image(img, prev_img, next_img, threshold, edge_threshold
                     continue
                 # Refinement step
                 if refine_keypoint(img, i, j, threshold, edge_threshold):
-                    keypoints.append((i, j))
-    
+                    # Append keypoint as a tuple (x, y, size, octave)
+                    keypoints.append((i, j, 1, 0))  # Default size and octave for now
     # Non-maximum suppression
     keypoints = sorted(keypoints, key=lambda x: img[x[0], x[1]], reverse=True)  # Sort by intensity
     filtered_keypoints = []
@@ -180,6 +179,7 @@ def detect_keypoints_in_image(img, prev_img, next_img, threshold, edge_threshold
             filtered_keypoints.append(keypoint)
     
     return filtered_keypoints
+
 
 
 
@@ -201,6 +201,60 @@ def refine_keypoint(img, i, j, threshold, edge_threshold):
         return True
     else:
         return False
+    
+def compareKeypoints(keypoint1, keypoint2):
+    """Custom comparison function for keypoints."""
+    if keypoint1[0] != keypoint2[0]:
+        return keypoint1[0] - keypoint2[0]
+    if keypoint1[1] != keypoint2[1]:
+        return keypoint1[1] - keypoint2[1]
+    if keypoint1[2] != keypoint2[2]:
+        return keypoint2[2] - keypoint1[2]
+    if keypoint1[3] != keypoint2[3]:
+        return keypoint1[3] - keypoint2[3]
+    if keypoint1[4] != keypoint2[4]:
+        return keypoint2[4] - keypoint1[4]
+    if keypoint1[5] != keypoint2[5]:
+        return keypoint2[5] - keypoint1[5]
+    if keypoint1[6] != keypoint2[6]:
+        return keypoint2[6] - keypoint1[6]
+    return 0  # Keypoints are equal
+
+
+
+# Modify the removeDuplicateKeypoints function accordingly
+def removeDuplicateKeypoints(keypoints):
+    """Sort keypoints and remove duplicate keypoints."""
+    if len(keypoints) < 2:
+        return keypoints
+
+    keypoints.sort(key=cmp_to_key(compareKeypoints))
+    unique_keypoints = [keypoints[0]]
+
+    for next_keypoint in keypoints[1:]:
+        last_unique_keypoint = unique_keypoints[-1]
+        if last_unique_keypoint[0] != next_keypoint[0] or \
+           last_unique_keypoint[1] != next_keypoint[1] or \
+           last_unique_keypoint[2] != next_keypoint[2] or \
+           last_unique_keypoint[3] != next_keypoint[3]:
+            unique_keypoints.append(next_keypoint)
+    return unique_keypoints
+
+def convertKeypointsToInputImageSize(keypoints):
+    """Convert keypoint point, size, and octave to input image size."""
+    converted_keypoints = []
+    for keypoint in keypoints:
+        # Check if the keypoint tuple has at least four elements
+        if len(keypoint) >= 4:
+            # Assuming keypoint is a tuple (x, y, size, octave)
+            converted_keypoint = (0.5 * np.array(keypoint[0]), 0.5 * np.array(keypoint[1]), keypoint[2] * 0.5, keypoint[3] & ~255 | ((keypoint[3] - 1) & 255))
+            converted_keypoints.append(converted_keypoint)
+        else:
+            # Handle the case when the keypoint tuple doesn't have enough elements
+            print("Error: Keypoint tuple does not have enough elements")
+    return converted_keypoints
+
+
 
 
 
@@ -208,7 +262,7 @@ def refine_keypoint(img, i, j, threshold, edge_threshold):
 
 
 # Testing
-image_path = r"C:\College\3rd Year\Second Term\Computer Vision\Aura\playground\renga.jpeg"
+image_path = r"C:\College\3rd Year\Second Term\Computer Vision\Aura\playground\cat.png"
 image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
 gaussian_pyramid = build_scale_space_pyramid(image)
@@ -219,12 +273,18 @@ threshold = 100
 
 # Detect keypoints
 keypoints = detect_keypoints(DoG_pyramid, threshold)
-
+# Remove duplicate keypoints
+unique_keypoints = removeDuplicateKeypoints(keypoints)
+# Convert keypoints to input image size
+converted_keypoints = convertKeypointsToInputImageSize(unique_keypoints)
+print(len(converted_keypoints))
 # Visualize keypoints 
 keypoint_image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-for idx, point in enumerate(keypoints):
+for idx, point in enumerate(unique_keypoints):
     color = (idx * 10 % 256, idx * 20 % 256, idx * 30 % 256)
-    cv2.circle(keypoint_image, (point[1], point[0]), 3, color, 1) 
+    # Extract x and y coordinates from the converted keypoint tuple
+    y, x, _, _ = point
+    cv2.circle(keypoint_image, (int(x), int(y)), 3, color, 1) 
 
 cv2.imshow("Keypoints", keypoint_image)
 cv2.waitKey(0)
