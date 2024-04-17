@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer comparer {
+  .__rcs-handle-button {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .__rcs-handle-arrow {
+    border-top: 4px solid transparent !important;
+    border-right: 5px solid !important;
+    border-bottom: 4px solid transparent !important;
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 300%;
+  animation: gradient 6s ease infinite alternate;
+}

@@ -2,10 +2,16 @@
 
 Aura is a comprehensive image processing toolkit designed to provide a wide range of image manipulation capabilities. It offers an intuitive interface and robust performance, making it a powerful tool for anyone interested in image processing, from hobbyists to professionals.
 
+<div align="center">
+  <img src="assets/mockup.png" />
+</div>
+
+
 ## Table of Contents
 
 - [Features](#features)
 - [Getting Started](#getting-started)
+- [Technologies Used](#technologies-used)
 - [Contributors](#contributors)
 
 ## Features
@@ -23,6 +29,10 @@ Aura comes with a wide range of features:
 - **Image Processing**: Aura can apply grayscale, normalization, and equalization to images, and it provides a histogram for visualizing the image's color distribution.
 
 - **Thresholding**: Aura supports both global and local thresholding, allowing users to adjust the intensity levels in an image to separate objects from the background.
+
+- **Hough Transform**: Aura can perform Hough Transform for line, circles, and ellipses detection.
+
+- **Active Contouring**: Aura supports active contouring for calculating perimeter and area of detected shapes.
 
 These features make Aura a versatile tool for a wide range of image processing tasks.
 
@@ -65,6 +75,25 @@ uvicorn main:app --reload
 ```
 
 5. Enjoy working with Aura :)
+
+## Technologies Used
+
+This project leverages a variety of modern technologies to deliver a robust and efficient application. Here's a brief overview of the key technologies used:
+
+- **Desktop Application**
+  - Electron.js
+  - React.js
+  - TypeScript
+  - Tanstack Router
+  - Tailwind CSS
+  - Shadcn/UI
+  - React Hook Form
+  - Zustand
+- **Backend**
+  - FastAPI
+  - OpenCV
+  - NumPy
+
 
 ## Contributors
 
