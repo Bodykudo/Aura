@@ -20,11 +20,10 @@ def SIFT(image):
     print(len(keypoints))
     print(keypoints)
     return keypoints, descriptors
-        
-      
+  
     
 def build_scale_space_pyramid(
-    image, num_octaves=3, num_scales=5, sigma=1.6, downsampling_factor=2
+    image, num_octaves=4, num_scales=5, sigma=1.6, downsampling_factor=2
 ):
     """
     Constructs a scale-space pyramid representation of a grayscale image.
@@ -109,6 +108,7 @@ def generate_DoG_pyramid(gaussian_pyramid):
         DoG_pyramid.append(DoG_octave)
 
     return DoG_pyramid
+
 
 def detect_keypoints(DoG_pyramid, threshold, edge_threshold=0.03):
     keypoints = []
@@ -333,7 +333,7 @@ def convert_to_cv2_keypoints(keypoints):
     cv2_keypoints = []
     for kp in keypoints:
         x, y, angle= kp
-        cv2_kp = cv2.KeyPoint(x, y, size=200)
+        cv2_kp = cv2.KeyPoint(x, y, size=5)
         angle_float = float(angle)
         # Ensure angle is within valid range (0 to 360 degrees)
         angle_valid = angle_float % 360.0
@@ -352,7 +352,7 @@ kp2, ds2 = SIFT(image2)
 
 
 image1_with_keypoints = cv2.drawKeypoints(image1, kp1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-image2_with_keypoints = cv2.drawKeypoints(image1, kp2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+image2_with_keypoints = cv2.drawKeypoints(image2, kp2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
 # bf = cv2.BFMatcher()
 
@@ -458,10 +458,10 @@ def get_matching(img1,img2,method):
     
     return matched_image , match_time
 #############################################################################################################
-# matched_image, match_time = get_matching(image1, image2, "ncc")
-# print(match_time)
-# # Display the matched image
-# cv2.imshow("Matched Image", matched_image)
+matched_image, match_time = get_matching(image1, image2, "ncc")
+print(match_time)
+# Display the matched image
+cv2.imshow("Matched Image", matched_image)
 cv2.imshow("Matched Image_kp1", image1_with_keypoints)
 cv2.imshow("Matched Image_kp2", image2_with_keypoints)
 cv2.waitKey(0)
