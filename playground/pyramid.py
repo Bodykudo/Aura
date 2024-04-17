@@ -170,9 +170,9 @@ def detect_keypoints_in_image(img, prev_img, next_img, threshold, edge_threshold
                 if is_edge_point(img, i, j, edge_threshold):
                     continue
                 # Refinement step
-                if refine_keypoint(img, i, j, threshold, edge_threshold):
-                    # Append keypoint as a tuple (x, y, size, octave)
-                    keypoints.append((i, j, 1, 0))  # Default size and octave for now
+                refined_keypoint = refine_keypoint(img, i, j, threshold, edge_threshold)
+                if refined_keypoint:
+                    keypoints.append(refined_keypoint)
     # Non-maximum suppression
     keypoints = sorted(keypoints, key=lambda x: img[x[0], x[1]], reverse=True)  # Sort by intensity
     filtered_keypoints = []
@@ -199,10 +199,12 @@ def refine_keypoint(img, i, j, threshold, edge_threshold):
     r = trace_H ** 2 / det_H
     
     # Check if the keypoint meets the criteria for refinement
-    if det_H > 0.03 and (r+2) < threshold:
-        return True
+    if det_H > 0.03 and (r + 2) < threshold:
+        # Return the refined keypoint
+        return (i, j, 1, 0)  # Default size and octave for now
     else:
-        return False
+        # Keypoint does not meet refinement criteria
+        return None
     
 def compareKeypoints(keypoint1, keypoint2):
     """Custom comparison function for keypoints."""
