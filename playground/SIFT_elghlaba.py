@@ -106,7 +106,7 @@ def generate_DoG_pyramid(gaussian_pyramid):
             DoG_octave.append(DoG_image)
         DoG_pyramid.append(DoG_octave)
 
-    return DoG_pyramidx
+    return DoG_pyramid
 
 def detect_keypoints(DoG_pyramid, threshold, edge_threshold=0.03):
     keypoints = []
