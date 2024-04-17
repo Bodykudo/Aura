@@ -126,53 +126,83 @@ DoG_pyramid = generate_DoG_pyramid(gaussian_pyramid)
 # print("Scale-space pyramid and DoG pyramid generation complete!")
 
 
-def detect_keypoints(DoG_pyramid, threshold):
+def detect_keypoints(DoG_pyramid, threshold, edge_threshold=0.03):
     keypoints = []
     for octave, octave_images in enumerate(DoG_pyramid):
         for scale, img in enumerate(octave_images[1:-1]):  
             prev_img = octave_images[scale]
             next_img = octave_images[scale + 2]
-            keypoints.extend(detect_keypoints_in_image(img, prev_img, next_img, threshold))
+            keypoints.extend(detect_keypoints_in_image(img, prev_img, next_img, threshold, edge_threshold,0))
     return keypoints
 
-def is_local_extremum(center, upper, lower):
+import numpy as np
+
+def is_local_extremum(center, same_picture_neighbors, adjacent_picture_neighbors):
     center_val = center[1, 1]
-    if center_val > np.max(upper) or center_val < np.min(lower):
+    
+    # Combine all neighboring pixels
+    all_neighbors = np.concatenate((same_picture_neighbors, adjacent_picture_neighbors))
+    
+    # Check if the center pixel is a local extremum
+    if (center_val > np.max(all_neighbors)) or (center_val < np.min(all_neighbors)):
         return True
-    if center_val < np.max(upper) or center_val > np.min(lower):
+    else:
         return False
 
-def is_edge_point(img, i, j, edge_threshold=10):
-    # Calculate gradient in x and y direction using Sobel operator
+
+
+def is_edge_point(img, i, j, edge_threshold):
     dx = img[i+1, j] - img[i-1, j]
     dy = img[i, j+1] - img[i, j-1]
-    
-    # Calculate gradient magnitude
     gradient_magnitude = np.sqrt(dx**2 + dy**2)
-    
-    # If the gradient magnitude is below the threshold, it's considered an edge point
     if gradient_magnitude > edge_threshold:
-        return False
-    else:
         return True
+    return False
 
-
-def detect_keypoints_in_image(img, prev_img, next_img, threshold):
+def detect_keypoints_in_image(img, prev_img, next_img, threshold, edge_threshold, min_distance):
     keypoints = []
     for i in range(1, img.shape[0] - 1):
         for j in range(1, img.shape[1] - 1):
             if is_local_extremum(img[i-1:i+2, j-1:j+2], prev_img[i-1:i+2, j-1:j+2], next_img[i-1:i+2, j-1:j+2]):
-                # Check for low contrast
                 center_val = img[i, j]
                 if abs(center_val) < threshold:
                     continue
-                
-                # Check for proximity to edge
-                if is_edge_point(img, i, j):
+                if is_edge_point(img, i, j, edge_threshold):
                     continue
-                
-                keypoints.append((i, j))
-    return keypoints
+                # Refinement step
+                if refine_keypoint(img, i, j, threshold, edge_threshold):
+                    keypoints.append((i, j))
+    
+    # Non-maximum suppression
+    keypoints = sorted(keypoints, key=lambda x: img[x[0], x[1]], reverse=True)  # Sort by intensity
+    filtered_keypoints = []
+    for keypoint in keypoints:
+        if not any(np.linalg.norm(np.array(keypoint) - np.array(existing)) < min_distance for existing in filtered_keypoints):
+            filtered_keypoints.append(keypoint)
+    
+    return filtered_keypoints
+
+
+
+def refine_keypoint(img, i, j, threshold, edge_threshold):
+    # Compute Hessian matrix components
+    Dxx = img[i, j + 1] + img[i, j - 1] - 2 * img[i, j]
+    Dyy = img[i + 1, j] + img[i - 1, j] - 2 * img[i, j]
+    Dxy = (img[i + 1, j + 1] - img[i + 1, j - 1] - img[i - 1, j + 1] + img[i - 1, j - 1]) / 4
+    
+    # Compute trace and determinant of Hessian matrix
+    trace_H = Dxx + Dyy
+    det_H = Dxx * Dyy - Dxy ** 2
+    
+    # Calculate the ratio of the eigenvalues
+    r = trace_H ** 2 / det_H
+    
+    # Check if the keypoint meets the criteria for refinement
+    if det_H > 0.03 and (r+2) < threshold:
+        return True
+    else:
+        return False
+
 
 def compute_gradients(image):
     kernel_x = np.array([[-1, 0, 1],
@@ -223,10 +253,6 @@ def interpolate_peak(hist):
 
 
 
-#we will eliminate the keypoints that have low contrast or lie very close to the edge
-
-
-
 # Testing
 
 image = cv2.imread('cat.png', cv2.IMREAD_GRAYSCALE)
@@ -252,3 +278,14 @@ plt.xlabel('Orientation (degrees)')
 plt.ylabel('Magnitude')
 plt.title('Gradient Orientation Histogram')
 plt.show()
+
+
+# Visualize keypoints 
+# keypoint_image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+# for idx, point in enumerate(keypoints):
+#     color = (idx * 10 % 256, idx * 20 % 256, idx * 30 % 256)
+#     cv2.circle(keypoint_image, (point[1], point[0]), 3, color, 1) 
+
+# cv2.imshow("Keypoints", keypoint_image)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
