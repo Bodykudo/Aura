@@ -242,20 +242,6 @@ def removeDuplicateKeypoints(keypoints):
             unique_keypoints.append(next_keypoint)
     return unique_keypoints
 
-def convertKeypointsToInputImageSize(keypoints):
-    """Convert keypoint point, size, and octave to input image size."""
-    converted_keypoints = []
-    for keypoint in keypoints:
-        # Check if the keypoint tuple has at least four elements
-        if len(keypoint) >= 4:
-            # Assuming keypoint is a tuple (x, y, size, octave)
-            converted_keypoint = (0.5 * np.array(keypoint[0]), 0.5 * np.array(keypoint[1]), keypoint[2] * 0.5, keypoint[3] & ~255 | ((keypoint[3] - 1) & 255))
-            converted_keypoints.append(converted_keypoint)
-        else:
-            # Handle the case when the keypoint tuple doesn't have enough elements
-            print("Error: Keypoint tuple does not have enough elements")
-    return converted_keypoints
-
 
 def compute_gradients(image):
     kernel_x = np.array([[-1, 0, 1],
@@ -321,9 +307,7 @@ threshold = 100
 keypoints = detect_keypoints(DoG_pyramid, threshold)
 # Remove duplicate keypoints
 unique_keypoints = removeDuplicateKeypoints(keypoints)
-# Convert keypoints to input image size
-converted_keypoints = convertKeypointsToInputImageSize(unique_keypoints)
-print(len(converted_keypoints))
+print(len(unique_keypoints ))
 
 
 # Visualize keypoints 
