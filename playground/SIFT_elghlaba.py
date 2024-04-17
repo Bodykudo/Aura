@@ -2,26 +2,28 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from functools import cmp_to_key
+
 def SIFT(image):
     # Define threshold for keypoint response
+    # image = image.astype('float32')
     threshold = 100
     gaussian_pyramid = build_scale_space_pyramid(image)
     DoG_pyramid = generate_DoG_pyramid(gaussian_pyramid)
     magnitude, angle = compute_gradients(image)
     # Detect keypoints
     keypoints = detect_keypoints(DoG_pyramid, threshold)
+    histograms, keypoints = assign_orientation(keypoints, np.dstack((magnitude, angle)))
+    print("#########################################################")
+    print(keypoints)
+    descriptors = keypoint_descriptor(image, keypoints)
+    keypoints = convert_to_cv2_keypoints(keypoints)
     print(len(keypoints))
     print(keypoints)
-    histograms, keypoints = assign_orientation(keypoints, np.dstack((magnitude, angle)))
-    descriptors = keypoint_descriptor(image, keypoints)
-    print(len(descriptors))
     return keypoints, descriptors
-        
-    
-    
+  
     
 def build_scale_space_pyramid(
-    image, num_octaves=3, num_scales=5, sigma=1.6, downsampling_factor=2
+    image, num_octaves=4, num_scales=5, sigma=1.6, downsampling_factor=2
 ):
     """
     Constructs a scale-space pyramid representation of a grayscale image.
@@ -55,11 +57,11 @@ def build_scale_space_pyramid(
     current_image = image.copy()  # Create a copy to avoid modifying the original
 
     for octave_level in range(num_octaves):
-        print(f"Processing octave {octave_level + 1}...")
+        # print(f"Processing octave {octave_level + 1}...")
         octave = []
 
         for scale_level in range(num_scales):
-            print(f"  Building scale {scale_level + 1}...")
+            # print(f"  Building scale {scale_level + 1}...")
 
             # Apply Gaussian blur for scale invariance
             blurred_image = cv2.GaussianBlur(current_image, (0, 0), sigma)
@@ -71,7 +73,7 @@ def build_scale_space_pyramid(
         # Downsample the image for the next octave (reduce resolution)
         new_width = int(current_image.shape[1] / downsampling_factor)
         new_height = int(current_image.shape[0] / downsampling_factor)
-        print(f"  Downscaling image to {new_width}x{new_height} for next octave")
+        # print(f"  Downscaling image to {new_width}x{new_height} for next octave")
         current_image = cv2.resize(
             current_image, (new_width, new_height), interpolation=cv2.INTER_NEAREST
         )
@@ -80,7 +82,6 @@ def build_scale_space_pyramid(
         sigma = 1.6
 
         pyramid.append(octave)
-
     return pyramid
 
 def generate_DoG_pyramid(gaussian_pyramid):
@@ -102,11 +103,12 @@ def generate_DoG_pyramid(gaussian_pyramid):
         DoG_octave = []
         for i in range(len(octave) - 1):
             # Calculate DoG by subtracting consecutive scales within an octave
-            DoG_image = octave[i + 1] - octave[i]
+            DoG_image = np.subtract(octave[i + 1], octave[i])
             DoG_octave.append(DoG_image)
         DoG_pyramid.append(DoG_octave)
 
     return DoG_pyramid
+
 
 def detect_keypoints(DoG_pyramid, threshold, edge_threshold=0.03):
     keypoints = []
@@ -264,16 +266,15 @@ def interpolate_peak(hist):
 def keypoint_descriptor(image, keypoints):
     descriptors = []
 
-def keypoint_descriptor(image, keypoints):
+def keypoint_descriptor(image, keypoints,  descriptor_length=128):
     descriptors = []
 
     for kp in keypoints:
         descriptor = compute_descriptor(image, kp[0], kp[1])
-        descriptors.append(descriptor)
-
+         # Pad or truncate the descriptor to a fixed length
+        padded_descriptor = np.pad(descriptor, (0, max(0, descriptor_length - len(descriptor))), mode='constant')
+        descriptors.append(padded_descriptor)
     return np.array(descriptors)
-
-
 
 def compute_descriptor(image, x, y, block_size=4, num_bins=8):
     descriptor = []
@@ -326,6 +327,21 @@ def compute_gradient(patch):
 
     return gradient_magnitude, gradient_orientation
 
+import cv2
+
+def convert_to_cv2_keypoints(keypoints):
+    cv2_keypoints = []
+    for kp in keypoints:
+        x, y, angle= kp
+        cv2_kp = cv2.KeyPoint(x, y, size=5)
+        angle_float = float(angle)
+        # Ensure angle is within valid range (0 to 360 degrees)
+        angle_valid = angle_float % 360.0
+        cv2_kp.angle = angle_valid
+        cv2_keypoints.append(cv2_kp)
+    return cv2_keypoints
+
+
 
 # Testing
 image1 = cv2.imread("./playground/box.png", cv2.IMREAD_GRAYSCALE)
@@ -334,9 +350,9 @@ image2 = cv2.imread("./playground/box_in_scene.png", cv2.IMREAD_GRAYSCALE)
 kp1, ds1 = SIFT(image1)
 kp2, ds2 = SIFT(image2)
 
-# ds1_array = np.array(ds1)
-# ds2_array = np.array(ds2)
 
+image1_with_keypoints = cv2.drawKeypoints(image1, kp1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+image2_with_keypoints = cv2.drawKeypoints(image2, kp2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
 # bf = cv2.BFMatcher()
 
@@ -351,62 +367,102 @@ kp2, ds2 = SIFT(image2)
 
 # # Draw matches
 # matched_image = cv2.drawMatchesKnn(image1, kp1, image2, kp2, good_matches, None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-
 # # Display the matched image
 # cv2.imshow("Matched Image", matched_image)
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
 
+import time
+
+#############################################################################################################
+def matching(descriptor1 , descriptor2 , match_calculator):
+    
+    keypoints1 = descriptor1.shape[0]
+    keypoints2 = descriptor2.shape[0]
+    matches = []
+
+    for kp1 in range(keypoints1):
+
+        distance = -np.inf
+        y_index = -1
+        for kp2 in range(keypoints2):
+
+         
+            value = match_calculator(descriptor1[kp1], descriptor2[kp2])
+
+            if value > distance:
+              distance = value
+              y_index = kp2
+        
+        match = cv2.DMatch()
+        match.queryIdx = kp1
+        match.trainIdx = y_index
+        match.distance = distance
+        matches.append(match)
+    matches= sorted(matches, key=lambda x: x.distance, reverse=True)
+    return matches
+############################################################################################################# 
+
+def calculate_ncc(descriptor1 , descriptor2):
 
 
+    out1_normalized = (descriptor1 - np.mean(descriptor1)) / (np.std(descriptor1))
+    out2_normalized = (descriptor2 - np.mean(descriptor2)) / (np.std(descriptor2))
 
-# Visualize the histogram for the first keypoint
-# plt.bar(np.arange(0, 360, 10), histograms[0], width=10, align='center')
-# plt.xlabel('Orientation (degrees)')
-# plt.ylabel('Magnitude')
-# plt.title('Gradient Orientation Histogram')
-# plt.show()
+    correlation_vector = np.multiply(out1_normalized, out2_normalized)
 
+    correlation = float(np.mean(correlation_vector))
 
-# Visualize keypoints 
-# keypoint_image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-# for idx, point in enumerate(keypoints):
-#     color = (idx * 10 % 256, idx * 20 % 256, idx * 30 % 256)
-#     cv2.circle(keypoint_image, (point[1], point[0]), 3, color, 1) 
+    return correlation
+#############################################################################################################
 
-# cv2.imshow("Keypoints", keypoint_image)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+def calculate_ssd(descriptor1 , descriptor2):
 
-# # Testing
-# image_path = 'cat.png'
-# image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    ssd = 0
+    for m in range(len(descriptor1)):
+        ssd += (descriptor1[m] - descriptor2[m]) ** 2
 
-# gaussian_pyramid = build_scale_space_pyramid(image)
+    ssd = - (np.sqrt(ssd))
+    return ssd
 
-# # Generate the Difference-of-Gaussian (DoG) pyramid
-# DoG_pyramid = generate_DoG_pyramid(gaussian_pyramid)
+#############################################################################################################
 
-# # Display all levels of the pyramid (optional)
-# for octave_level, octave in enumerate(gaussian_pyramid):
-#     for scale_level, image_level in enumerate(octave):
-#         print(f"Octave {octave_level + 1}, Scale level {scale_level + 1}:")
-#         print(f"  Resolution: {image_level.shape[1]}x{image_level.shape[0]}")
-#         print(f"  Scale: {1.6 * (2 ** scale_level)}\n")
-#         cv2.imshow(f"Octave {octave_level + 1}, Scale {scale_level + 1}", image_level)
-#         cv2.waitKey(0)
-#         cv2.destroyAllWindows()
+def get_matching(img1,img2,method):
 
-# # Display all levels of the DoG pyramid (optional)
-# for octave_level, octave in enumerate(DoG_pyramid):
-#     for scale_level, image_level in enumerate(octave):
-#         print(f"Octave {octave_level + 1}, Scale level {scale_level + 1}:")
-#         print(f"  Resolution: {image_level.shape[1]}x{image_level.shape[0]}")
-#         cv2.imshow(
-#             f"DoG Octave {octave_level + 1}, Scale {scale_level + 1}", image_level
-#         )
-#         cv2.waitKey(0)
-#         cv2.destroyAllWindows()
+    # Compute SIFT keypoints and descriptors
+    start_time =time.time()
+    keypoints_1, descriptor1 = SIFT(img1)
 
-# print("Scale-space pyramid and DoG pyramid generation complete!")
+    keypoints_2, descriptor2 = SIFT(img2)
 
+    end_time = time.time()
+    Duration_sift = end_time - start_time
+
+    if method  == 'ncc':
+        start = time.time()
+        matches_ncc = matching(descriptor1, descriptor2, calculate_ncc)
+        matched_image = cv2.drawMatches(img1, keypoints_1, img2, keypoints_2,
+                                        matches_ncc[:30], img2, flags=2)
+        end = time.time()
+        match_time = end - start
+
+    else:
+
+        start = time.time()
+
+        matches_ssd = matching(descriptor1, descriptor2, calculate_ssd)
+        matched_image = cv2.drawMatches(img1, keypoints_1, img2, keypoints_2,
+                                        matches_ssd[:30], img2, flags=2)
+        end = time.time()
+        match_time = end - start
+    
+    return matched_image , match_time
+#############################################################################################################
+matched_image, match_time = get_matching(image1, image2, "ncc")
+print(match_time)
+# Display the matched image
+cv2.imshow("Matched Image", matched_image)
+cv2.imshow("Matched Image_kp1", image1_with_keypoints)
+cv2.imshow("Matched Image_kp2", image2_with_keypoints)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
