@@ -95,7 +95,7 @@ def generate_DoG_pyramid(gaussian_pyramid):
 
 
 # Testing
-image_path = 'cat.png'
+image_path = r'C:\College\3rd Year\Second Term\Computer Vision\Aura\playground\box_in_scene.png'
 image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
 gaussian_pyramid = build_scale_space_pyramid(image)
@@ -139,10 +139,8 @@ def detect_keypoints(DoG_pyramid, threshold, edge_threshold=0.03):
 
 def is_local_extremum(center, same_picture_neighbors, adjacent_picture_neighbors):
     center_val = center[1, 1]
-    
     # Combine all neighboring pixels
     all_neighbors = np.concatenate((same_picture_neighbors, adjacent_picture_neighbors))
-    
     # Check if the center pixel is a local extremum
     if (center_val > np.max(all_neighbors)) or (center_val < np.min(all_neighbors)):
         return True
@@ -152,10 +150,14 @@ def is_local_extremum(center, same_picture_neighbors, adjacent_picture_neighbors
 
 
 def is_edge_point(img, i, j, edge_threshold):
+    height, width = img.shape  # Get the dimensions of the image
+    if i < 1 or i >= height - 1 or j < 1 or j >= width - 1 or i + 2 >= height:
+        return False 
     dx = img[i+1, j] - img[i-1, j]
     dy = img[i, j+1] - img[i, j-1]
+    ds = img[i+2, j+1] - img[i, j+1]
     gradient_magnitude = np.sqrt(dx**2 + dy**2)
-    if gradient_magnitude > edge_threshold:
+    if dx > 0.5 and dy > 0.5 and ds > 0.5:
         return True
     return False
 
@@ -165,7 +167,7 @@ def detect_keypoints_in_image(img, prev_img, next_img, threshold, edge_threshold
         for j in range(1, img.shape[1] - 1):
             if is_local_extremum(img[i-1:i+2, j-1:j+2], prev_img[i-1:i+2, j-1:j+2], next_img[i-1:i+2, j-1:j+2]):
                 center_val = img[i, j]
-                if abs(center_val) < threshold:
+                if abs(center_val) < 25:
                     continue
                 if is_edge_point(img, i, j, edge_threshold):
                     continue
@@ -201,7 +203,7 @@ def refine_keypoint(img, i, j, threshold, edge_threshold):
     # Check if the keypoint meets the criteria for refinement
     if det_H > 0.03 and (r + 2) < threshold:
         # Return the refined keypoint
-        return (i, j, 1, 0)  # Default size and octave for now
+        return (i, j, 1, 0)  
     else:
         # Keypoint does not meet refinement criteria
         return None
@@ -216,12 +218,12 @@ def compareKeypoints(keypoint1, keypoint2):
         return keypoint2[2] - keypoint1[2]
     if keypoint1[3] != keypoint2[3]:
         return keypoint1[3] - keypoint2[3]
-    if keypoint1[4] != keypoint2[4]:
-        return keypoint2[4] - keypoint1[4]
-    if keypoint1[5] != keypoint2[5]:
-        return keypoint2[5] - keypoint1[5]
-    if keypoint1[6] != keypoint2[6]:
-        return keypoint2[6] - keypoint1[6]
+    # if keypoint1[4] != keypoint2[4]:
+    #     return keypoint2[4] - keypoint1[4]
+    # if keypoint1[5] != keypoint2[5]:
+    #     return keypoint2[5] - keypoint1[5]
+    # if keypoint1[6] != keypoint2[6]:
+    #     return keypoint2[6] - keypoint1[6]
     return 0  # Keypoints are equal
 
 
@@ -296,9 +298,10 @@ def interpolate_peak(hist):
 
 # Testing
 
-image = cv2.imread('cat.png', cv2.IMREAD_GRAYSCALE)
+# image = cv2.imread(image_path = r'C:\College\3rd Year\Second Term\Computer Vision\Aura\playground\Lenna.png'
+# , cv2.IMREAD_GRAYSCALE)
 
-magnitude, angle = compute_gradients(image)
+# magnitude, angle = compute_gradients(image)
 
 gaussian_pyramid = build_scale_space_pyramid(image)
 DoG_pyramid = generate_DoG_pyramid(gaussian_pyramid)
@@ -313,25 +316,25 @@ print(len(unique_keypoints ))
 
 
 # Visualize keypoints 
-# keypoint_image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-# for idx, point in enumerate(unique_keypoints):
-#     color = (idx * 10 % 256, idx * 20 % 256, idx * 30 % 256)
-#     # Extract x and y coordinates from the converted keypoint tuple
-#     y, x, _, _ = point
-#     cv2.circle(keypoint_image, (int(x), int(y)), 3, color, 1) 
+keypoint_image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+for idx, point in enumerate(unique_keypoints):
+    color = (idx * 10 % 256, idx * 20 % 256, idx * 30 % 256)
+    # Extract x and y coordinates from the converted keypoint tuple
+    y, x, _, _ = point
+    cv2.circle(keypoint_image, (int(x), int(y)), 3, color, 1) 
 
-# cv2.imshow("Keypoints", keypoint_image)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+cv2.imshow("Keypoints", keypoint_image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
-histograms,bebo = assign_orientation(keypoints, np.dstack((magnitude, angle)))
+# histograms,bebo = assign_orientation(keypoints, np.dstack((magnitude, angle)))
 
 
 # Visualize the histogram for the first keypoint
-plt.bar(np.arange(0, 360, 10), histograms[0], width=10, align='center')
-plt.xlabel('Orientation (degrees)')
-plt.ylabel('Magnitude')
-plt.title('Gradient Orientation Histogram')
-plt.show()
+# plt.bar(np.arange(0, 360, 10), histograms[0], width=10, align='center')
+# plt.xlabel('Orientation (degrees)')
+# plt.ylabel('Magnitude')
+# plt.title('Gradient Orientation Histogram')
+# plt.show()
 
 
