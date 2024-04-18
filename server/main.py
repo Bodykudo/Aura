@@ -14,6 +14,7 @@ from api.endpoints import (
     active_contour,
     corners,
     matching,
+    sift,
 )
 from api.config import uploads_folder
 
@@ -53,3 +54,4 @@ app.include_router(hough.router, prefix="/api")
 app.include_router(active_contour.router, prefix="/api")
 app.include_router(corners.router, prefix="/api")
 app.include_router(matching.router, prefix="/api")
+app.include_router(sift.router, prefix="/api")

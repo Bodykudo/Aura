@@ -1,10 +1,14 @@
 from pydantic import BaseModel
 
 
-class SIFTModel(BaseModel):
-    firstImageId: str
-    secondImageId: str
-    octaveNumber: int
-    scalesNumber: int
+class SiftKeypointsModel(BaseModel):
     sigma: float
-    downsamplingFactor: float
+    numIntervals: int
+    assumedBlur: float
+
+
+class SiftMatchingModel(BaseModel):
+    type: str
+    originalImageId: str
+    templateImageId: str
+    numMatches: int

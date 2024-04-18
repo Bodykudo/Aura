@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -11,6 +11,15 @@ import OutputImage from '@renderer/components/OutputImage';
 import { Form, FormControl, FormField, FormItem } from '@renderer/components/ui/form';
 import { Input } from '@renderer/components/ui/input';
 import { Label } from '@renderer/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
+} from '@renderer/components/ui/select';
 import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
@@ -19,19 +28,44 @@ import { useToast } from '@renderer/components/ui/use-toast';
 import placeholder from '@renderer/assets/placeholder.png';
 
 const siftSchema = z.object({
+  mode: z.enum(['keypoints', 'matching']).nullable(),
   sigma: z.number(),
-  k: z.number(),
-  contrastThreshold: z.number(),
-  edgeThreshold: z.number(),
-  magnitudeThreshold: z.number()
+  numIntervals: z.number(),
+  assumedBlur: z.number(),
+  type: z.enum(['ssd', 'ncc']),
+  numMatches: z.number()
 });
 
+const modesOptions = [
+  { label: 'Detect Keypoints', value: 'keypoints' },
+  { label: 'Match Images Features', value: 'matching' }
+];
+
 const inputs = [
-  { label: 'Sigma', name: 'sigma', min: 0.1, max: 3, step: 0.1 },
-  { label: 'K', name: 'k', min: 0.1, max: 5, step: 0.1 },
-  { label: 'Contrast Threshold', name: 'contrastThreshold', min: 0.01, max: 1, step: 0.01 },
-  { label: 'Edge Threshold', name: 'edgeThreshold', min: 1, max: 100, step: 1 },
-  { label: 'Magnitude Threshold', name: 'magnitudeThreshold', min: 0.01, max: 1, step: 0.01 }
+  {
+    value: 'keypoints',
+    inputs: [
+      { label: 'Sigma', name: 'sigma', min: 0.1, max: 5, step: 0.1 },
+      { label: 'Number of Intervals', name: 'numIntervals', min: 1, max: 5, step: 1 },
+      { label: 'Assumed Blur', name: 'assumedBlur', min: 0.01, max: 1, step: 0.01 }
+    ]
+  },
+  {
+    value: 'matching',
+    inputs: [
+      {
+        label: 'Matching Algorithm',
+        name: 'type',
+        type: 'select',
+        placeholder: 'Select matching algorithm',
+        options: [
+          { label: 'Sum of Squared Difference', value: 'ssd' },
+          { label: 'Normalized Cross Correlation', value: 'ncc' }
+        ]
+      },
+      { label: 'Number of Matches', name: 'numMatches', min: 1, max: 500, step: 1 }
+    ]
+  }
 ];
 
 function SIFT() {
@@ -49,13 +83,16 @@ function SIFT() {
   const form = useForm<z.infer<typeof siftSchema>>({
     resolver: zodResolver(siftSchema),
     defaultValues: {
-      sigma: 1,
-      k: 2,
-      contrastThreshold: 0.04,
-      edgeThreshold: 10,
-      magnitudeThreshold: 0.2
+      mode: 'keypoints',
+      sigma: 1.6,
+      numIntervals: 3,
+      assumedBlur: 0.5,
+      type: 'ncc',
+      numMatches: 30
     }
   });
+
+  const [elapsedTime, setElapsedTime] = useState<number | null>(null);
 
   const { toast } = useToast();
 
@@ -72,6 +109,9 @@ function SIFT() {
     const imageReceivedListener = (event: any) => {
       if (event.data.image) {
         setProcessedImageURL(0, event.data.image);
+      }
+      if (event.data.time) {
+        setElapsedTime(event.data.time);
       }
       setIsProcessing(false);
     };
@@ -99,21 +139,35 @@ function SIFT() {
   }, []);
 
   const onSubmit = (data: z.infer<typeof siftSchema>) => {
-    const body = {
-      originalImage: filesIds[0],
-      templateImage: filesIds[1],
-      sigma: data.sigma,
-      k: data.k,
-      contrastThreshold: data.contrastThreshold,
-      edgeThreshold: data.edgeThreshold,
-      magnitudeThreshold: data.magnitudeThreshold
-    };
-
+    let body = {};
     setIsProcessing(true);
-    ipcRenderer.send('process:image', {
-      body,
-      url: '/api/sift'
-    });
+
+    if (data.mode === 'keypoints') {
+      body = {
+        sigma: data.sigma,
+        numIntervals: data.numIntervals,
+        assumedBlur: data.assumedBlur
+      };
+
+      ipcRenderer.send('process:image', {
+        body,
+        url: `/api/sift/keypoints/${filesIds[0]}`
+      });
+    }
+
+    if (data.mode === 'matching') {
+      const body = {
+        type: data.type,
+        originalImageId: filesIds[0],
+        templateImageId: filesIds[1],
+        numMatches: data.numMatches
+      };
+
+      ipcRenderer.send('process:image', {
+        body,
+        url: '/api/sift/matching'
+      });
+    }
   };
 
   return (
@@ -133,51 +187,136 @@ function SIFT() {
               className="flex flex-wrap gap-4 justify-between items-end"
             >
               <div className="flex flex-wrap gap-2">
-                {inputs.map((input) => {
-                  return (
-                    <FormField
-                      key={input.label}
-                      name={input.name}
-                      render={({ field }) => (
-                        <FormItem className="w-[150px]">
-                          <Label htmlFor={input.name}>{input.label}</Label>
-                          <FormControl className="p-2">
-                            <Input
-                              type="number"
-                              disabled={isProcessing}
-                              id={input.name}
-                              min={input.min}
-                              max={input.max}
-                              step={input.step}
-                              {...field}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
+                <FormField
+                  control={form.control}
+                  name="mode"
+                  render={({ field }) => (
+                    <FormItem className="w-[250px] mr-4">
+                      <Label htmlFor="mode">SIFT Mode</Label>
+                      <Select disabled={isProcessing} onValueChange={field.onChange}>
+                        <FormControl id="mode">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select SIFT mode" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Modes</SelectLabel>
+
+                            {modesOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex flex-wrap gap-2">
+                  {inputs.find((input) => input.value === form.watch('mode')) &&
+                    inputs
+                      .find((input) => input.value === form.watch('mode'))
+                      ?.inputs.map((input) => {
+                        if (input.type === 'select') {
+                          return (
+                            <FormField
+                              key={input.name}
+                              name={input.name}
+                              render={({ field }) => (
+                                <FormItem className="w-[250px]">
+                                  <Label htmlFor={input.name}>{input.label}</Label>
+                                  <Select
+                                    disabled={isProcessing}
+                                    value={field.value ?? ''}
+                                    onValueChange={field.onChange}
+                                  >
+                                    <FormControl id={input.name}>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder={input.placeholder} />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectGroup>
+                                        <SelectLabel>{input.label}</SelectLabel>
+
+                                        {input.options?.map((option) => (
+                                          <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectGroup>
+                                    </SelectContent>
+                                  </Select>
+                                </FormItem>
+                              )}
                             />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  );
-                })}
+                          );
+                        } else {
+                          return (
+                            <FormField
+                              key={input.name}
+                              name={input.name}
+                              render={({ field }) => (
+                                <FormItem className="w-[150px]">
+                                  <Label htmlFor={input.name}>{input.label}</Label>
+                                  <FormControl className="p-2">
+                                    <Input
+                                      type="number"
+                                      disabled={isProcessing}
+                                      id={input.name}
+                                      min={input.min}
+                                      max={input.max}
+                                      step={input.step}
+                                      {...field}
+                                      onChange={(e) => field.onChange(Number(e.target.value))}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          );
+                        }
+                      })}
+                </div>
               </div>
               <Button disabled={!filesIds[0] || isProcessing} type="submit">
-                Apply SIFT
+                {form.watch('mode') === 'keypoints' ? 'Detect Keypoints' : 'Match Features'}
               </Button>
             </form>
           </Form>
         </div>
-        <div className="flex flex-col gap-4">
+        {form.watch('mode') === 'keypoints' && (
           <div className="flex flex-col md:flex-row gap-4 w-full">
-            <div className="flex flex-col gap-1 w-full">
-              <p className="font-medium text-xl">Image</p>
-              <Dropzone index={0} />
-            </div>
-            <div className="flex flex-col gap-1 w-full">
-              <p className="font-medium text-xl">Template</p>
-              <Dropzone index={1} />
-            </div>
+            <Dropzone index={0} />
+            <OutputImage
+              index={0}
+              extra={elapsedTime ? `Elapsed time: ${elapsedTime.toFixed(2)}s` : undefined}
+              placeholder={placeholder}
+            />
           </div>
-          <OutputImage index={0} placeholder={placeholder} />
-        </div>
+        )}
+        {form.watch('mode') === 'matching' && (
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row gap-4 w-full">
+              <div className="flex flex-col gap-1 w-full">
+                <p className="font-medium text-xl">Image</p>
+                <Dropzone index={0} />
+              </div>
+              <div className="flex flex-col gap-1 w-full">
+                <p className="font-medium text-xl">Template</p>
+                <Dropzone index={1} />
+              </div>
+            </div>
+            <OutputImage
+              index={0}
+              extra={elapsedTime ? `Elapsed time: ${elapsedTime.toFixed(2)}s` : undefined}
+              placeholder={placeholder}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
