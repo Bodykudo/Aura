@@ -59,7 +59,6 @@ async def match_features(matching_options: SiftMatchingModel):
     original_image_sift.apply()
     original_image_keypoints = original_image_sift.get_keypoints()
     original_image_descriptors = original_image_sift.get_descriptors()
-    print("First image sift done")
 
     template_image_sift = SIFT(
         template_image_path,
@@ -67,7 +66,6 @@ async def match_features(matching_options: SiftMatchingModel):
     template_image_sift.apply()
     template_image_keypoints = template_image_sift.get_keypoints()
     template_image_descriptors = template_image_sift.get_descriptors()
-    print("Second image sift done")
 
     matched_image = SIFT.match_images(
         original_image_path,
@@ -79,7 +77,6 @@ async def match_features(matching_options: SiftMatchingModel):
         matching_options.type,
         matching_options.numMatches,
     )
-    print("Matching done")
 
     end_time = time.time()
     elapsed_time = end_time - start_time
