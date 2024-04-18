@@ -38,7 +38,7 @@ const cornersSchema = z.object({
   minDistance: z.number()
 });
 
-const cornerssOptions = [
+const cornersOptions = [
   { label: 'Harris Corner Detector', value: 'harris' },
   { label: 'Lambda Corner Detector', value: 'lambda' },
   { label: 'Harris & Lambda Hybrid Detector', value: 'both' }
@@ -191,7 +191,7 @@ function Corners() {
                         <SelectContent>
                           <SelectGroup>
                             <SelectLabel>Algorithms</SelectLabel>
-                            {cornerssOptions.map((option) => (
+                            {cornersOptions.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>

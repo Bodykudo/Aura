@@ -1,8 +1,111 @@
-import Heading from '@renderer/components/Heading';
+import { useEffect } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { BringToFront } from 'lucide-react';
 
+import Heading from '@renderer/components/Heading';
+import Dropzone from '@renderer/components/Dropzone';
+import OutputImage from '@renderer/components/OutputImage';
+import { Form, FormControl, FormField, FormItem } from '@renderer/components/ui/form';
+import { Label } from '@renderer/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
+} from '@renderer/components/ui/select';
+import { Button } from '@renderer/components/ui/button';
+
+import useGlobalState from '@renderer/hooks/useGlobalState';
+import { useToast } from '@renderer/components/ui/use-toast';
+
+import placeholder from '@renderer/assets/placeholder.png';
+
+const matchingSchema = z.object({
+  type: z.enum(['ssd', 'ncc']).nullable()
+});
+
+const matchingOptions = [
+  { label: 'Sum of Squared Difference', value: 'ssd' },
+  { label: 'Normalized Cross Correlation', value: 'ncc' }
+];
+
 function Matching() {
+  const ipcRenderer = (window as any).ipcRenderer;
+
+  const {
+    filesIds,
+    setFileId,
+    setUploadedImageURL,
+    setProcessedImageURL,
+    isProcessing,
+    setIsProcessing
+  } = useGlobalState();
+
+  const form = useForm<z.infer<typeof matchingSchema>>({
+    resolver: zodResolver(matchingSchema)
+  });
+
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setIsProcessing(false);
+    setFileId(0, null);
+    setFileId(1, null);
+    setUploadedImageURL(0, null);
+    setUploadedImageURL(1, null);
+    setProcessedImageURL(0, null);
+  }, []);
+
+  useEffect(() => {
+    const imageReceivedListener = (event: any) => {
+      if (event.data.image) {
+        setProcessedImageURL(0, event.data.image);
+      }
+      setIsProcessing(false);
+    };
+    ipcRenderer.on('image:received', imageReceivedListener);
+
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
+  }, []);
+
+  useEffect(() => {
+    const imageErrorListener = () => {
+      toast({
+        title: 'Something went wrong',
+        description: "Your images couldn't be processed, please try again later.",
+        variant: 'destructive'
+      });
+      setIsProcessing(false);
+    };
+    ipcRenderer.on('image:error', imageErrorListener);
+
+    return () => {
+      ipcRenderer.removeAllListeners();
+    };
+  }, []);
+
+  const onSubmit = (data: z.infer<typeof matchingSchema>) => {
+    const body = {
+      type: data.type,
+      originalImage: filesIds[0],
+      templateImage: filesIds[1]
+    };
+
+    setIsProcessing(true);
+    ipcRenderer.send('process:image', {
+      body,
+      url: '/api/matching'
+    });
+  };
+
   return (
     <div>
       <Heading
@@ -12,7 +115,61 @@ function Matching() {
         iconColor="text-sky-400"
         bgColor="bg-sky-400/10"
       />
-      <div className="px-4 lg:px-8"></div>
+      <div className="px-4 lg:px-8">
+        <div className="mb-4">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="flex flex-wrap gap-4 justify-between items-end"
+            >
+              <div className="flex flex-wrap gap-2">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem className="w-[250px] mr-4">
+                      <Label htmlFor="type">Matching Algorithm</Label>
+                      <Select disabled={isProcessing} onValueChange={field.onChange}>
+                        <FormControl id="type">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select matching algorithm" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Algorithms</SelectLabel>
+                            {matchingOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <Button disabled={!filesIds[0] || isProcessing} type="submit">
+                Match Images
+              </Button>
+            </form>
+          </Form>
+        </div>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row gap-4 w-full">
+            <div className="flex flex-col gap-1 w-full">
+              <p className="font-medium text-xl">Image</p>
+              <Dropzone index={0} />
+            </div>
+            <div className="flex flex-col gap-1 w-full">
+              <p className="font-medium text-xl">Template</p>
+              <Dropzone index={1} />
+            </div>
+          </div>
+          <OutputImage index={0} placeholder={placeholder} />
+        </div>
+      </div>
     </div>
   );
 }
