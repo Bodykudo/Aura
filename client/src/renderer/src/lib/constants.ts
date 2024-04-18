@@ -73,7 +73,7 @@ export const routes = [
   {
     label: 'Corner Detection',
     icon: ArrowDownRightFromSquare,
-    href: '/corner',
+    href: '/corners',
     color: 'text-rose-600',
     bgColor: 'bg-rose-600/10'
   },

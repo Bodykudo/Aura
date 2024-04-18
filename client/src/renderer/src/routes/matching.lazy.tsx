@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -47,6 +47,8 @@ function Matching() {
     setIsProcessing
   } = useGlobalState();
 
+  const [elapsedTime, setElapsedTime] = useState<number | null>(null);
+
   const form = useForm<z.infer<typeof matchingSchema>>({
     resolver: zodResolver(matchingSchema)
   });
@@ -66,6 +68,9 @@ function Matching() {
     const imageReceivedListener = (event: any) => {
       if (event.data.image) {
         setProcessedImageURL(0, event.data.image);
+      }
+      if (event.data.time) {
+        setElapsedTime(event.data.time);
       }
       setIsProcessing(false);
     };
@@ -95,8 +100,8 @@ function Matching() {
   const onSubmit = (data: z.infer<typeof matchingSchema>) => {
     const body = {
       type: data.type,
-      originalImage: filesIds[0],
-      templateImage: filesIds[1]
+      originalImageId: filesIds[0],
+      templateImageId: filesIds[1]
     };
 
     setIsProcessing(true);
@@ -167,7 +172,11 @@ function Matching() {
               <Dropzone index={1} />
             </div>
           </div>
-          <OutputImage index={0} placeholder={placeholder} />
+          <OutputImage
+            index={0}
+            extra={elapsedTime ? `Elapsed time: ${elapsedTime.toFixed(2)}s` : undefined}
+            placeholder={placeholder}
+          />
         </div>
       </div>
     </div>

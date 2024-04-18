@@ -13,7 +13,7 @@ const ThresholdingLazyImport = createFileRoute('/thresholding')();
 const HybridLazyImport = createFileRoute('/hybrid')();
 const HoughLazyImport = createFileRoute('/hough')();
 const ContoursLazyImport = createFileRoute('/contours')();
-const CornerLazyImport = createFileRoute('/corner')();
+const CornersLazyImport = createFileRoute('/corners')();
 const MatchingLazyImport = createFileRoute('/matching')();
 const SiftLazyImport = createFileRoute('/sift')();
 const SegmentationLazyImport = createFileRoute('/segmentation')();
@@ -64,10 +64,10 @@ const ContoursLazyRoute = ContoursLazyImport.update({
   getParentRoute: () => rootRoute
 } as any).lazy(() => import('./routes/contours.lazy').then((d) => d.Route));
 
-const CornerLazyRoute = CornerLazyImport.update({
-  path: '/corner',
+const CornersLazyRoute = CornersLazyImport.update({
+  path: '/corners',
   getParentRoute: () => rootRoute
-} as any).lazy(() => import('./routes/corner.lazy').then((d) => d.Route));
+} as any).lazy(() => import('./routes/corners.lazy').then((d) => d.Route));
 
 const MatchingLazyRoute = MatchingLazyImport.update({
   path: '/matching',
@@ -123,8 +123,8 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContoursLazyImport;
       parentRoute: typeof rootRoute;
     };
-    '/corner': {
-      preLoaderRoute: typeof CornerLazyImport;
+    '/corners': {
+      preLoaderRoute: typeof CornersLazyImport;
       parentRoute: typeof rootRoute;
     };
     '/matching': {
@@ -153,7 +153,7 @@ export const routeTree = rootRoute.addChildren([
   HybridLazyRoute,
   HoughLazyRoute,
   ContoursLazyRoute,
-  CornerLazyRoute,
+  CornersLazyRoute,
   MatchingLazyRoute,
   SiftLazyRoute,
   SegmentationLazyRoute
