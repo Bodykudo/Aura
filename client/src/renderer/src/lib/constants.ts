@@ -75,24 +75,21 @@ export const routes = [
     icon: ArrowDownRightFromSquare,
     href: '/corner',
     color: 'text-rose-600',
-    bgColor: 'bg-rose-600/10',
-    comingSoon: true
+    bgColor: 'bg-rose-600/10'
   },
   {
     label: 'Image Matching',
     icon: BringToFront,
     href: '/matching',
     color: 'text-sky-400',
-    bgColor: 'bg-sky-400/10',
-    comingSoon: true
+    bgColor: 'bg-sky-400/10'
   },
   {
     label: 'SIFT Descriptors',
     icon: ClipboardX,
     href: '/sift',
     color: 'text-teal-600',
-    bgColor: 'bg-teal-600/10',
-    comingSoon: true
+    bgColor: 'bg-teal-600/10'
   },
   {
     label: 'Segmentation',

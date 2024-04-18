@@ -37,7 +37,7 @@ class CornersDetector:
         corners = np.argwhere(harris_response > threshold * harris_response.max())
         for corner in corners:
             y, x = corner
-            cv2.circle(image, (x, y), 3, (255, 0, 0), -1)
+            cv2.circle(image, (x, y), 5, (255, 0, 0), -1)
 
         return image
 
@@ -78,7 +78,7 @@ class CornersDetector:
 
         for corner in corners:
             x, y = corner.ravel()
-            cv2.circle(image, (int(x), int(y)), 3, (0, 255, 0), -1)
+            cv2.circle(image, (int(x), int(y)), 10, (0, 0, 255), -1)
         return image
 
     @staticmethod
