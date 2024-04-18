@@ -639,55 +639,69 @@ def generateDescriptors(keypoints, gaussian_images, window_width=4, num_bins=8, 
 image1 = cv2.imread("box.png", cv2.IMREAD_GRAYSCALE)
 image2 = cv2.imread("box_in_scene.png", cv2.IMREAD_GRAYSCALE)
 
-keypoints1, descriptors1 = SIFT(image1)
-keypoints2, descriptors2 = SIFT(image2)
+# keypoints1, descriptors1 = SIFT(image1)
+# keypoints2, descriptors2 = SIFT(image2)
 
-print("keypoints done!")
-image1_with_keypoints = cv2.drawKeypoints(
-    image1, keypoints1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
-)
-image2_with_keypoints = cv2.drawKeypoints(
-    image2, keypoints2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
-)
+# print("keypoints done!")
+# image1_with_keypoints = cv2.drawKeypoints(
+#     image1, keypoints1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
+# )
+# image2_with_keypoints = cv2.drawKeypoints(
+#     image2, keypoints2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
+# )
 
 
 #############################################################################################################
-def matching(descriptor1, descriptor2, match_calculator):
+def matching(descriptor1 , descriptor2 , match_calculator):
+    
     keypoints1 = descriptor1.shape[0]
     keypoints2 = descriptor2.shape[0]
     matches = []
 
     for kp1 in range(keypoints1):
-        distances = match_calculator(descriptor1[kp1], descriptor2)
-        if len(distances) == 0:
-            continue  # Skip if distances array is empty
-        y_index = np.argmax(distances)
+
+        distance = -np.inf
+        y_index = -1
+        for kp2 in range(keypoints2):
+
+         
+            value = match_calculator(descriptor1[kp1], descriptor2[kp2])
+
+            if value > distance:
+              distance = value
+              y_index = kp2
         
         match = cv2.DMatch()
         match.queryIdx = kp1
         match.trainIdx = y_index
-        match.distance = distances[y_index]
+        match.distance = distance
         matches.append(match)
-
+    matches= sorted(matches, key=lambda x: x.distance, reverse=True)
     return matches
+############################################################################################################# 
 
-def calculate_ncc(descriptor1, descriptor2):
-    mean1 = np.mean(descriptor1)
-    mean2 = np.mean(descriptor2)
-    std1 = np.std(descriptor1)
-    std2 = np.std(descriptor2)
-    
-    descriptor1_normalized = (descriptor1 - mean1) / std1
-    descriptor2_normalized = (descriptor2 - mean2) / std2
+def calculate_ncc(descriptor1 , descriptor2):
 
-    correlation_vector = np.multiply(descriptor1_normalized, descriptor2_normalized)
 
-    correlation = np.mean(correlation_vector)
+    out1_normalized = (descriptor1 - np.mean(descriptor1)) / (np.std(descriptor1))
+    out2_normalized = (descriptor2 - np.mean(descriptor2)) / (np.std(descriptor2))
+
+    correlation_vector = np.multiply(out1_normalized, out2_normalized)
+
+    correlation = float(np.mean(correlation_vector))
+
     return correlation
+#############################################################################################################
 
-def calculate_ssd(descriptor1, descriptor2):
-    ssd = np.sum((descriptor1 - descriptor2) ** 2, axis=1)
-    return -np.sqrt(ssd)
+def calculate_ssd(descriptor1 , descriptor2):
+
+    ssd = 0
+    for m in range(len(descriptor1)):
+        ssd += (descriptor1[m] - descriptor2[m]) ** 2
+
+    ssd = - (np.sqrt(ssd))
+    return ssd
+
 #############################################################################################################
 
 def get_matching(img1,img2,method):
@@ -721,11 +735,11 @@ def get_matching(img1,img2,method):
     
     return matched_image , match_time
 # #############################################################################################################
-matched_image, match_time = get_matching(image1, image2, "ncc")
-# print(match_time)
+matched_image, match_time = get_matching(image1, image2, "ssd")
+print(match_time)
 # Display the matched image
 cv2.imshow("Matched Image", matched_image)
-cv2.imshow("Matched Image_kp1", image1_with_keypoints)
-cv2.imshow("Matched Image_kp2", image2_with_keypoints)
+# cv2.imshow("Matched Image_kp1", image1_with_keypoints)
+# cv2.imshow("Matched Image_kp2", image2_with_keypoints)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
