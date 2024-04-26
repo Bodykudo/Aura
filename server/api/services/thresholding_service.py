@@ -11,7 +11,7 @@ class Thresholding:
         grayscale_image = (
             cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) > 2 else image
         )
-        histogram = np.histogram(grayscale_image, bins=256, range=[0, 256])[0]
+        histogram = np.histogram(grayscale_image.flatten(), bins=256, range=[0, 256])[0]
         cumulative_histogram = histogram.cumsum()
         global_mean_intensity = np.sum(np.arange(256) * histogram) / histogram.sum()
         return grayscale_image, histogram, cumulative_histogram, global_mean_intensity
@@ -83,9 +83,9 @@ class Thresholding:
         return binary_image
 
     @staticmethod
-    def spectral_thresholding_local(image_path: str, window_size: int):
+    def local_thresholding(image_path: str, thresholding_type: str, window_size: int, offset: int = 0):
         image = read_image(image_path)
-        result = np.zeros(image.shape[:2], dtype=np.uint8)
+        thresholded_image = np.zeros(image.shape[:2], dtype=np.uint8)
         image_height, image_width = image.shape[:2]
         window = (window_size, window_size)
         step_y, step_x = window
@@ -95,10 +95,84 @@ class Thresholding:
                 sub_image = image[
                     y : min(y + step_y, image_height), x : min(x + step_x, image_width)
                 ]
-                local_thresholded = Thresholding.spectral_thresholding(sub_image)
+                if thresholding_type == "optimal":
+                    _, threshold = Thresholding.optimal_thresholding(sub_image)
+                    threshold = threshold - offset
+                    local_thresholded = (sub_image > threshold).astype(np.uint8)
+                
+                elif thresholding_type == "otsu":
+                    _, threshold = Thresholding.otsu_thresholding(sub_image)
+                    threshold = threshold - offset
+                    local_thresholded = (sub_image > threshold).astype(np.uint8)
+                
+                elif thresholding_type == "spectral":
+                    local_thresholded = Thresholding.spectral_thresholding(sub_image)
 
-                result[
+                thresholded_image[
                     y : min(y + step_y, image_height), x : min(x + step_x, image_width)
                 ] = local_thresholded
 
-        return result
+        return thresholded_image
+
+    @staticmethod
+    def optimal_thresholding(image_or_path):
+        if isinstance(image_or_path, str):
+            image = read_image(image_or_path)
+        else:
+            image = image_or_path
+
+        height, width = image.shape[:2]
+        corners = [
+            image[0, 0],
+            image[0, width - 1],
+            image[height - 1, 0],
+            image[height - 1, width - 1],
+        ]
+        threshold = np.mean(corners)
+        while True:
+            class1_mean = np.mean(image[image < threshold])
+            class2_mean = np.mean(image[image >= threshold])
+            new_threshold = (class1_mean + class2_mean) / 2
+            if np.abs(new_threshold - threshold) < 1e-6:
+                break
+            threshold = new_threshold
+            
+        binary_image = (image > threshold).astype(np.uint8) * 255
+
+        return binary_image, threshold
+    
+    @staticmethod
+    def otsu_thresholding(image_or_path):
+        if isinstance(image_or_path, str):
+            image = read_image(image_or_path)
+        else:
+            image = image_or_path
+
+        grayscale_image, histogram, _, global_mean_intensity = Thresholding.preprocess(
+            image
+        )
+
+        pdf = histogram / float(np.sum(histogram))
+        cdf = np.cumsum(pdf)
+        cumulative_sum_intensity = np.cumsum(np.arange(256) * pdf)
+
+        background_weight = cdf
+        foreground_weight = 1.0 - background_weight
+
+        class1_mean = cumulative_sum_intensity / (background_weight + 1e-6)
+        class2_mean = (global_mean_intensity - cumulative_sum_intensity) / (
+            foreground_weight + 1e-6
+        )
+
+        inter_class_variances = (
+            background_weight * foreground_weight * (class1_mean - class2_mean) ** 2
+        )
+
+        threshold = np.argmax(inter_class_variances)
+
+        binary_image = (image > threshold).astype(np.uint8) * 255
+
+        return binary_image, threshold
+
+
+
