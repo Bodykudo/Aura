@@ -98,45 +98,40 @@ input_image = cv2.imread(
     r"d:\Raghda\3rd Year\2nd Term\CV\Aura\playground\cameraman.jpg", cv2.IMREAD_COLOR
 )
 
+# Convert the original image to grayscale
+input_image_gray = cv2.cvtColor(input_image, cv2.COLOR_BGR2GRAY)
+
 # Apply spectral thresholding
-# thresholded_image = spectral_thresholding(input_image)
+thresholded_image = spectral_thresholding(input_image)
 
-# # Convert the thresholded image to RGB for display
-# thresholded_image_rgb = cv2.cvtColor(thresholded_image, cv2.COLOR_GRAY2RGB)
-
-# # Display the original and thresholded images
-# plt.figure(figsize=(10, 5))
-
-# plt.subplot(1, 2, 1)
-# plt.imshow(cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB))
-# plt.title("Original Image")
-# plt.axis("off")
-
-# plt.subplot(1, 2, 2)
-# plt.imshow(thresholded_image_rgb)
-# plt.title("Thresholded Image")
-# plt.axis("off")
-
-# plt.show()
+# Convert the thresholded image to RGB for display
+thresholded_image_rgb = cv2.cvtColor(thresholded_image, cv2.COLOR_GRAY2RGB)
 
 # Apply local spectral thresholding
-# window_size = (100, 100)
-# local_thresholded_image = spectral_thresholding_local(input_image, window_size)
+window_size = (100, 100)
+local_thresholded_image = spectral_thresholding_local(input_image, window_size)
 
-# # Display the original and local thresholded images
-# plt.figure(figsize=(10, 5))
+# Display the original, global thresholded, and local thresholded images
+plt.figure(figsize=(15, 5))
 
-# plt.subplot(1, 2, 1)
-# plt.imshow(cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB))
-# plt.title("Original Image")
-# plt.axis("off")
+# Original Image (Black and White)
+plt.subplot(1, 3, 1)
+plt.imshow(input_image_gray, cmap="gray")
+plt.title("Original Image")
+plt.axis("off")
 
-# plt.subplot(1, 2, 2)
-# plt.imshow(local_thresholded_image, cmap="gray")
-# plt.title("Local Thresholded Image")
-# plt.axis("off")
+# Global Thresholded Image
+plt.subplot(1, 3, 2)
+plt.imshow(thresholded_image_rgb)
+plt.title("Global Thresholded Image")
+plt.axis("off")
 
-# plt.show()
+# Local Thresholded Image
+plt.subplot(1, 3, 3)
+plt.imshow(local_thresholded_image, cmap="gray")
+plt.title("Local Thresholded Image")
+plt.axis("off")
+plt.show()
 
 
 # --------------------OLD THRESHOLDING-------------------------
