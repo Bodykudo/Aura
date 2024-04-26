@@ -34,7 +34,8 @@ const filtersSchema = z.object({
   windowSize: z.number(),
   threshold: z.number(),
   clustersNumber: z.number(),
-  colorThreshold: z.number()
+  colorThreshold: z.number(),
+  neighboursNumber: z.number()
 });
 
 const filtersOptions = [
@@ -68,7 +69,10 @@ const inputs = [
   },
   {
     value: 'regionGrowing',
-    inputs: [{ label: 'Threshold', name: 'threshold', min: 1, max: 100, step: 1 }]
+    inputs: [
+      { label: 'Threshold', name: 'threshold', min: 1, max: 100, step: 1 },
+      { label: 'Neighbours Number', name: 'neighboursNumber', min: 4, max: 8, step: 4 }      
+    ]
   }
 ];
 
@@ -92,7 +96,8 @@ function Segmentation() {
       windowSize: 30,
       threshold: 100,
       clustersNumber: 7,
-      colorThreshold: 5
+      colorThreshold: 5,
+      neighboursNumber: 4
     }
   });
 
@@ -143,7 +148,8 @@ function Segmentation() {
       windowSize: data.windowSize,
       threshold: data.threshold,
       clustersNumber: data.clustersNumber,
-      colorThreshold: data.colorThreshold
+      colorThreshold: data.colorThreshold,
+      neighboursNumber: data.neighboursNumber
     };
 
     setIsProcessing(true);

@@ -9,3 +9,4 @@ class SegmentationModel(BaseModel):
     threshold: int
     clustersNumber: int
     colorThreshold: int
+    neighboursNumber: int

@@ -34,6 +34,13 @@ async def apply_segmentation(image_id: str, segmentation: SegmentationModel):
             window_size=segmentation.windowSize,
             threshold=segmentation.threshold / 100,
         )
+    elif segmentation.type == "regionGrowing" :
+        segmented_image = Segmentation.region_growing_segmentaion(
+            image_path=image_path,
+            threshold=segmentation.threshold,
+            neighbours_number=segmentation.neighboursNumber
+            
+        )
 
     segmented_image = convert_image(segmented_image)
 
