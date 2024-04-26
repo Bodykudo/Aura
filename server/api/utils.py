@@ -1,10 +1,12 @@
 import os
+from fastapi import HTTPException
 import cv2
+import numpy as np
+from numba import jit, prange
+import time
 import base64
 from secrets import token_hex
-import time
-import numpy as np
-from fastapi import HTTPException
+
 from api.config import uploads_folder
 
 
@@ -99,3 +101,19 @@ def gaussian_kernel(size: int, sigma: float):
 def hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip("#")
     return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+
+
+@jit(nopython=True)
+def euclidean_distance(point1, point2):
+    return np.sqrt(np.sum((point1 - point2) ** 2))
+
+
+@jit(nopython=True, parallel=True)
+def compute_distances(feature_space, current_mean_array):
+    distances = np.zeros(feature_space.shape[0])
+    for i in prange(len(feature_space)):
+        distance = 0
+        for j in range(5):
+            distance += (current_mean_array[0][j] - feature_space[i][j]) ** 2
+        distances[i] = distance**0.5
+    return distances

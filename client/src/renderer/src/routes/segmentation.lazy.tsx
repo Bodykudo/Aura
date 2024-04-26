@@ -31,11 +31,10 @@ const filtersSchema = z.object({
   type: z.enum(['kmeans', 'meanShift', 'agglomerative', 'regionGrowing']).nullable(),
   k: z.number(),
   maxIterations: z.number(),
-  colorRadius: z.number(),
-  spatialRadius: z.number(),
+  windowSize: z.number(),
+  threshold: z.number(),
   clustersNumber: z.number(),
-  colorThreshold: z.number(),
-  threshold: z.number()
+  colorThreshold: z.number()
 });
 
 const filtersOptions = [
@@ -56,9 +55,8 @@ const inputs = [
   {
     value: 'meanShift',
     inputs: [
-      { label: 'Color Radius', name: 'colorRadius', min: 1, max: 100, step: 1 },
-      { label: 'Spatial Radius', name: 'spatialRadius', min: 1, max: 100, step: 1 },
-      { label: 'Max Iterations', name: 'maxIterations', min: 1, max: 300, step: 1 }
+      { label: 'Window Size', name: 'windowSize', min: 1, max: 100, step: 1 },
+      { label: 'Threshold', name: 'threshold', min: 1, max: 100, step: 1 }
     ]
   },
   {
@@ -91,11 +89,10 @@ function Segmentation() {
     defaultValues: {
       k: 5,
       maxIterations: 100,
-      colorRadius: 30,
-      spatialRadius: 30,
+      windowSize: 30,
+      threshold: 100,
       clustersNumber: 7,
-      colorThreshold: 5,
-      threshold: 100
+      colorThreshold: 5
     }
   });
 
@@ -143,11 +140,10 @@ function Segmentation() {
       type: data.type,
       k: data.k,
       maxIterations: data.maxIterations,
-      colorRadius: data.colorRadius,
-      spatialRadius: data.spatialRadius,
+      windowSize: data.windowSize,
+      threshold: data.threshold,
       clustersNumber: data.clustersNumber,
-      colorThreshold: data.colorThreshold,
-      threshold: data.threshold
+      colorThreshold: data.colorThreshold
     };
 
     setIsProcessing(true);

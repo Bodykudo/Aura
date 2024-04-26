@@ -15,6 +15,7 @@ from api.endpoints import (
     corners,
     matching,
     sift,
+    segmentation,
 )
 from api.config import uploads_folder
 
@@ -55,3 +56,4 @@ app.include_router(active_contour.router, prefix="/api")
 app.include_router(corners.router, prefix="/api")
 app.include_router(matching.router, prefix="/api")
 app.include_router(sift.router, prefix="/api")
+app.include_router(segmentation.router, prefix="/api")
