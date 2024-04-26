@@ -6,7 +6,8 @@ from api.utils import convert_image, get_image
 
 router = APIRouter()
 
-thresholding_types = ["local", "global"]
+thresholding_types = ["optimal", "otsu", "spectral"]
+thresholding_scopes = ["local", "global"]
 
 
 @router.post("/thresholding/{image_id}")
@@ -14,25 +15,35 @@ async def apply_thresholding(image_id: str, thresholding: ThresholdingModel):
     """
     Apply local/global thresholding to an image.
     """
+
     if thresholding.type not in thresholding_types:
         raise HTTPException(status_code=400, detail="Thresholding type doesn't exist.")
+    if thresholding.scope not in thresholding_scopes:
+        raise HTTPException(status_code=400, detail="Thresholding scope doesn't exist.")
 
     image_path = get_image(image_id)
+    thresholded_image = None
 
-    output_image = None
-    if thresholding.type == "local":
-        output_image = Thresholding.local_thresholding(
-            image_path, thresholding.thresholdMargin, thresholding.blockSize
-        )
-    elif thresholding.type == "global":
-        output_image = Thresholding.global_thresholding(
-            image_path, thresholding.threshold
-        )
+    if thresholding.type == "optimal":
+        pass
+    elif thresholding.type == "otsu":
+        pass
+    elif thresholding.type == "spectral":
 
-    output_image = convert_image(output_image)
+        if thresholding.scope == "global":
+            thresholded_image = Thresholding.spectral_thresholding(image_path)
+        elif thresholding.scope == "local":
+            thresholded_image = Thresholding.spectral_thresholding_local(
+                image_path, window_size=thresholding.windowSize
+            )
+
+    thresholded_image = convert_image(thresholded_image)
 
     return {
         "success": True,
         "message": "Thresholding applied successfully.",
-        "image": output_image,
+        "type": thresholding.type,
+        "scope": thresholding.scope,
+        "image": thresholded_image,
+        "image id": image_id,
     }
