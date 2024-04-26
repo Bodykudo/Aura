@@ -96,7 +96,6 @@ export const routes = [
     icon: PieChart,
     href: '/segmentation',
     color: 'text-red-800',
-    bgColor: 'bg-red-800/10',
-    comingSoon: true
+    bgColor: 'bg-red-800/10'
   }
 ];
