@@ -5,3 +5,4 @@ class ThresholdingModel(BaseModel):
     type: str
     scope: str
     windowSize: int
+    offset: int

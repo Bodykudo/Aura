@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 from api.utils import read_image
 
@@ -83,7 +82,9 @@ class Thresholding:
         return binary_image
 
     @staticmethod
-    def local_thresholding(image_path: str, thresholding_type: str, window_size: int, offset: int = 0):
+    def local_thresholding(
+        image_path: str, thresholding_type: str, window_size: int, offset: int = 0
+    ):
         image = read_image(image_path)
         thresholded_image = np.zeros(image.shape[:2], dtype=np.uint8)
         image_height, image_width = image.shape[:2]
@@ -99,12 +100,12 @@ class Thresholding:
                     _, threshold = Thresholding.optimal_thresholding(sub_image)
                     threshold = threshold - offset
                     local_thresholded = (sub_image > threshold).astype(np.uint8)
-                
+
                 elif thresholding_type == "otsu":
                     _, threshold = Thresholding.otsu_thresholding(sub_image)
                     threshold = threshold - offset
                     local_thresholded = (sub_image > threshold).astype(np.uint8)
-                
+
                 elif thresholding_type == "spectral":
                     local_thresholded = Thresholding.spectral_thresholding(sub_image)
 
@@ -136,11 +137,11 @@ class Thresholding:
             if np.abs(new_threshold - threshold) < 1e-6:
                 break
             threshold = new_threshold
-            
+
         binary_image = (image > threshold).astype(np.uint8) * 255
 
         return binary_image, threshold
-    
+
     @staticmethod
     def otsu_thresholding(image_or_path):
         if isinstance(image_or_path, str):
@@ -173,6 +174,3 @@ class Thresholding:
         binary_image = (image > threshold).astype(np.uint8) * 255
 
         return binary_image, threshold
-
-
-
