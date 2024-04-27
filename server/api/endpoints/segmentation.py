@@ -38,7 +38,7 @@ async def apply_segmentation(image_id: str, segmentation: SegmentationModel):
         segmented_image = Segmentation.region_growing_segmentaion(
             image_path=image_path,
             threshold=segmentation.threshold,
-            neighbours_number=segmentation.neighboursNumber
+            seed_points=segmentation.seed_points,
             
         )
 

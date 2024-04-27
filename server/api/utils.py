@@ -117,13 +117,3 @@ def compute_distances(feature_space, current_mean_array):
             distance += (current_mean_array[0][j] - feature_space[i][j]) ** 2
         distances[i] = distance**0.5
     return distances
-
-def resize_image(image_data):
-    if image_data.shape[0] > 1000:
-        image_data = cv2.resize(image_data, (0,0), fx=0.25, fy=0.25)
-    if image_data.shape[0] > 500:
-        image_data = cv2.resize(image_data, (0,0), fx=0.5, fy=0.5)
-    return image_data
-
-def gaussian_filter(image_data, filter_size=3):
-    return cv2.GaussianBlur(image_data, (filter_size,filter_size), 0)

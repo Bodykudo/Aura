@@ -1,14 +1,12 @@
 import numpy as np
 import cv2
 import numpy as np
-import random
+import cv2
 
 from api.utils import (
     compute_distances,
     euclidean_distance,
     read_image,
-    resize_image,
-    gaussian_filter,
 
 )
 
@@ -110,94 +108,60 @@ class Segmentation:
     
 
     @staticmethod
-    def region_growing_segmentaion(image_path: str, threshold: int, neighbours_number: int):
-        image = cv2.imread(image_path)
-        if len(image.shape) == 3:  # If image is colored
-            original_image = np.copy(image)  # Make a copy of the original image for background
-            grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    def get_8_connected(x, y, shape):    
+        xmax = shape[0] - 1
+        ymax = shape[1] - 1
+        
+        connected_pixels = []
+        
+        for dx in range(3):
+            for dy in range(3):
+                connected_pixel_x = x + dx - 1
+                connected_pixel_y = y + dy - 1
+                if (0 <= connected_pixel_x <= xmax) and (0 <= connected_pixel_y <= ymax) and \
+                not (connected_pixel_x == x and connected_pixel_y == y):
+                    connected_pixels.append((connected_pixel_x, connected_pixel_y))
+        
+        return connected_pixels
+
+    @staticmethod
+    def region_growing_segmentaion(image_path: str, thershold: int, seed_points, test=lambda seed_x, seed_y, x, y, img, outimg: img[x, y] != 0, colormap=None):
+        original_image = cv2.imread(image_path)
+        image_gray = cv2.cvtColor(original_image , cv2.COLOR_BGR2GRAY)
+        ret, img = cv2.threshold(image_gray, thershold, 255, cv2.THRESH_BINARY)
+        processed = np.full((img.shape[0], img.shape[1]), False)
+        
+        if colormap is None:
+            outimg = np.zeros_like(img)
         else:
-            original_image  = image  # No need for conversion if already grayscale
+            outimg = np.zeros((img.shape[0], img.shape[1], colormap.shape[1]), dtype=np.uint8)
+        
+        for index, pix in enumerate(seed_points):
+            processed[pix[0], pix[1]] = True
+            if colormap is None:
+                outimg[pix[0], pix[1]] = img[pix[0], pix[1]]
+            else:
+                outimg[pix[0], pix[1]] = colormap[index % len(colormap)]
+        
+        while len(seed_points) > 0:
+            pix = seed_points[0]
+                
+            for coord in Segmentation.get_8_connected(pix[0], pix[1], img.shape):
+                if not processed[coord[0], coord[1]]:
+                    test_result = test(pix[0], pix[1], coord[0], coord[1], img, outimg)
+                    if test_result:
+                        outimg[coord[0], coord[1]] = outimg[pix[0], pix[1]]
+                        if not processed[coord[0], coord[1]]:
+                            seed_points.append(coord)
+                        processed[coord[0], coord[1]] = True
+                        
+            seed_points.pop(0)
 
-        image = resize_image(grayscale_image)
-        image = gaussian_filter(image)
-        segmentation = np.zeros(image.shape, dtype=np.uint8)
-        image_height, image_width = image.shape
-        threshold = threshold
-        seeds = []
+        contours, _ = cv2.findContours(processed.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        image_with_contours = original_image.copy()
+        # Draw contours on the original image
+        for contour in contours:
+            cv2.drawContours(image_with_contours, [contour], -1, (0, 255, 0), 2)
+        
+        return image_with_contours
 
-        if neighbours_number == 4:
-            orientations = [(1,0),(0,1),(-1,0),(0,-1)]
-        elif neighbours_number == 8:
-            orientations = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]
-
-        seeds.append((int(image_height/2), int(image_width/2)))
-        seeds.append((int(2*image_height/3), int(2*image_width/3)))
-        seeds.append((int(image_height/3-10), int(2*image_width/3)))
-
-        for seed in seeds:
-            curr_pixel = [seed[1], seed[0]]
-
-            if segmentation[curr_pixel[0], curr_pixel[1]] == 255:
-                continue
-
-            contour = []
-            seg_size = 1
-            mean_seg_value = (image[curr_pixel[0], curr_pixel[1]])
-            dist = 0
-
-            while(dist < threshold):
-                segmentation[curr_pixel[0], curr_pixel[1]] = 255
-                contour = Segmentation.explore_neighbours(contour, curr_pixel, orientations, segmentation)
-                nearest_neighbour_idx, dist = Segmentation.get_nearest_neighbour(contour, mean_seg_value, image)
-
-                if nearest_neighbour_idx == -1:
-                    break
-
-                curr_pixel = contour[nearest_neighbour_idx]
-                seg_size += 1
-                mean_seg_value = (mean_seg_value * seg_size + float(image[curr_pixel[0], curr_pixel[1]])) / (seg_size + 1)
-                del contour[nearest_neighbour_idx]
-        # Generate random colors for each segmented region
-        colors = [(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) for _ in range(256)]
-        colored_image = np.zeros((image_height,image_width, 3), dtype=np.uint8)
-        for y in range(image_height):
-            for x in range(image_width):
-                label = segmentation[y, x]
-                if label != 0:
-                    colored_image[y, x] = colors[label]
-                else:
-                    colored_image[y, x] = original_image[y, x]
-
-        return colored_image
-    
-    @staticmethod
-    def explore_neighbours(contour, current_pixel, orientations, segmentation):
-        for orientation in orientations:
-            neighbour = Segmentation.get_neighbouring_pixel(current_pixel, orientation, segmentation.shape)
-            if neighbour is None:
-                continue
-            if segmentation[neighbour[0], neighbour[1]] == 0:
-                contour.append(neighbour)
-                segmentation[neighbour[0], neighbour[1]] = 150
-        return contour
-
-    @staticmethod
-    def get_neighbouring_pixel(current_pixel, orient, img_shape):
-        neighbour = ((current_pixel[0] + orient[0]), (current_pixel[1] + orient[1]))
-        if Segmentation.is_pixel_inside_image(neighbour, img_shape):
-            return neighbour
-        else:
-            return None
-
-    @staticmethod
-    def get_nearest_neighbour(contour, mean_seg_value, image):
-        dist_list = [abs(int(image[pixel[0], pixel[1]]) - mean_seg_value) for pixel in contour]
-        if len(dist_list) == 0:
-            return -1, 1000
-        min_dist = min(dist_list)
-        index = dist_list.index(min_dist)
-        return index, min_dist
-
-    @staticmethod
-    def is_pixel_inside_image(pixel, img_shape):
-        return 0 <= pixel[0] < img_shape[0] and 0 <= pixel[1] < img_shape[1]

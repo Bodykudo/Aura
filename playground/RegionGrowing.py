@@ -1,135 +1,80 @@
-import cv2
 import numpy as np
-import random
+import cv2
 
-class Region_Growing():
-    def __init__(self, img, threshold, neighboursNum=4):
-        self.img = img
-        self.h, self.w = img.shape
-        self.segmentation = np.zeros(img.shape, dtype=np.uint8)
-        self.threshold = threshold
-        self.seeds = []
-        if neighboursNum == 4:
-            self.orientations = [(1,0),(0,1),(-1,0),(0,-1)]
-        elif neighboursNum == 8:
-            self.orientations = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)] # 8 connectivity
+def get_8_connected(x, y, shape):
+    xmax = shape[0] - 1
+    ymax = shape[1] - 1
+    
+    connected_pixels = []
+    
+    for dx in range(3):
+        for dy in range(3):
+            connected_pixel_x = x + dx - 1
+            connected_pixel_y = y + dy - 1
+            if (0 <= connected_pixel_x <= xmax) and (0 <= connected_pixel_y <= ymax) and \
+               not (connected_pixel_x == x and connected_pixel_y == y):
+                connected_pixels.append((connected_pixel_x, connected_pixel_y))
+    
+    return connected_pixels
 
-    def set_seeds(self):
-        self.seeds = []
-        # Selecting 10 seeds randomly
-        self.seeds.append((int(self.h/2),int(self.w/2)))
-        self.seeds.append((int(2*self.h/3),int(2*self.w/3)))
-        self.seeds.append((int(self.h/3-10),int(2*self.w/3)))
-
-    def segment(self):
-        for seed in self.seeds:
-            curr_pixel = [seed[1], seed[0]]
-            # Checking visited pixels
-            if self.segmentation[curr_pixel[0], curr_pixel[1]] == 255:
-                continue
-            contour = []
-            seg_size = 1
-            # Initialize mean with current pixel
-            mean_seg_value = (self.img[curr_pixel[0],curr_pixel[1]])
-            dist = 0
-
-            while(dist < self.threshold):
-                # Mark as visited
-                self.segmentation[curr_pixel[0], curr_pixel[1]] = 255
-                # Explore neighbours of current pixel
-                contour = self.__explore_neighbours(contour, curr_pixel)
-                # Get the nearest neighbour
-                nearest_neighbour_idx, dist = self.__get_nearest_neighbour(contour, mean_seg_value)
-                # If no more neighbours to grow, move to the next seed
-                if nearest_neighbour_idx == -1:
-                    break
-                # Update current pixel to the nearest neighbour and increment size
-                curr_pixel = contour[nearest_neighbour_idx]
-                seg_size += 1
-                # Update mean pixel value for segmentation
-                mean_seg_value = (mean_seg_value * seg_size + float(self.img[curr_pixel[0],curr_pixel[1]])) / (seg_size + 1)
-                # Delete from contour once the nearest neighbour is chosen as the current node for expansion
-                del contour[nearest_neighbour_idx]
-
-        return self.segmentation
-
-    def display_and_resegment(self, name="Region Growing"):
-        # Generate random colors for each segmented region
-        colors = [(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) for _ in range(256)]
-        colored_image = np.zeros((self.h, self.w, 3), dtype=np.uint8)
-        for y in range(self.h):
-            for x in range(self.w):
-                label = self.segmentation[y, x]
-                if label != 0:
-                    colored_image[y, x] = colors[label]
-                else:
-                    colored_image[y, x] = self.img[y, x]
-
-        return colored_image
-
-    def __explore_neighbours(self, contour, current_pixel):
-        for orientation in self.orientations:
-            neighbour = self.__get_neighbouring_pixel(current_pixel, orientation, self.img.shape)
-            if neighbour is None:
-                continue
-            if self.segmentation[neighbour[0],neighbour[1]] == 0:
-                contour.append(neighbour)
-                self.segmentation[neighbour[0],neighbour[1]] = 150
-        return contour
-
-    def __get_neighbouring_pixel(self, current_pixel, orient, img_shape):
-        # Getting neighbour
-        neighbour = ((current_pixel[0] + orient[0]), (current_pixel[1] + orient[1]))
-        # Checking if pixel is out of image boundaries
-        if self.is_pixel_inside_image(pixel=neighbour, img_shape=img_shape):
-            return neighbour
+def region_growing(img, seed_points, test=lambda seed_x, seed_y, x, y, img, outimg: img[x, y] != 0, colormap=None):
+    processed = np.full((img.shape[0], img.shape[1]), False)
+    
+    if colormap is None:
+        outimg = np.zeros_like(img)
+    else:
+        outimg = np.zeros((img.shape[0], img.shape[1], colormap.shape[1]), dtype=np.uint8)
+    
+    for index, pix in enumerate(seed_points):
+        processed[pix[0], pix[1]] = True
+        if colormap is None:
+            outimg[pix[0], pix[1]] = img[pix[0], pix[1]]
         else:
-            return None
+            outimg[pix[0], pix[1]] = colormap[index % len(colormap)]
+    
+    while len(seed_points) > 0:
+        pix = seed_points[0]
+            
+        for coord in get_8_connected(pix[0], pix[1], img.shape):
+            if not processed[coord[0], coord[1]]:
+                test_result = test(pix[0], pix[1], coord[0], coord[1], img, outimg)
+                if test_result:
+                    outimg[coord[0], coord[1]] = outimg[pix[0], pix[1]]
+                    if not processed[coord[0], coord[1]]:
+                        seed_points.append(coord)
+                    processed[coord[0], coord[1]] = True
+                    
+        seed_points.pop(0)
+    
+    return outimg, processed
 
-    def __get_nearest_neighbour(self, contour, mean_seg_value):
-        dist_list = [abs(int(self.img[pixel[0], pixel[1]]) - mean_seg_value) for pixel in contour]
-        if len(dist_list) == 0:
-            return -1, 1000
-        min_dist = min(dist_list)
-        index = dist_list.index(min_dist)
-        return index, min_dist
+def on_mouse(event, x, y, flags, params):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        print('Seed: ' + str(x) + ', ' + str(y), img[y, x])
+        clicks.append((int(y), int(x)))
 
-    def is_pixel_inside_image(self, pixel, img_shape):
-        return 0 <= pixel[0] < img_shape[0] and 0 <= pixel[1] < img_shape[1]
+clicks = []
+image_path = r"C:\College\3rd Year\Second Term\Computer Vision\Aura\playground\lenna.png"
+image_org = cv2.imread(image_path)
+image_gray = cv2.cvtColor(image_org, cv2.COLOR_BGR2GRAY)
+ret, img = cv2.threshold(image_gray, 130, 255, cv2.THRESH_BINARY)
 
-# Helper functions
-def resize_image(image_data):
-    if image_data.shape[0] > 1000:
-        image_data = cv2.resize(image_data, (0,0), fx=0.25, fy=0.25)
-    if image_data.shape[0] > 500:
-        image_data = cv2.resize(image_data, (0,0), fx=0.5, fy=0.5)
-    return image_data
+cv2.namedWindow('Input')
+cv2.setMouseCallback('Input', on_mouse, 0)
+cv2.imshow('Input', image_org)
+cv2.waitKey()
+cv2.destroyAllWindows()
 
-def apply_gaussian_smoothing(image_data, filter_size=3):
-    return cv2.GaussianBlur(image_data, (filter_size,filter_size), 0)
+seed = clicks
+region_filled, processed = region_growing(img, seed)
 
-# Main function to run region growing segmentation
-def run_region_growing(image_path, threshold, neighboursNum):
-    image_data = cv2.imread(image_path, 0)
-    image_data = resize_image(image_data)
-    image_data_post_smoothing = apply_gaussian_smoothing(image_data)
-    region_growing_instance = Region_Growing(image_data_post_smoothing, threshold=threshold, neighboursNum=neighboursNum)
-    region_growing_instance.set_seeds()
-    result = region_growing_instance.segment()
-    return result
+# Find contours of the filled region
+contours, _ = cv2.findContours(processed.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-# Define the image path
-image_path = "C:/College/3rd Year/Second Term/Computer Vision/Aura/playground/coin.jpg"
+# Draw contours on the original image
+for contour in contours:
+    cv2.drawContours(image_org, [contour], -1, (0, 255, 0), 2)
 
-# Define the threshold and number of neighbors
-threshold = 20
-neighboursNum = 4
-
-# Run region growing segmentation
-segmented_image = run_region_growing(image_path, threshold, neighboursNum)
-colored_image = 
-
-# Display the segmented image
-cv2.imshow('Segmented Image', segmented_image)
-cv2.waitKey(0)
+cv2.imshow('Region Edges on Original Image', image_org)
+cv2.waitKey()
 cv2.destroyAllWindows()
