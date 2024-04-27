@@ -47,12 +47,18 @@ def local_otsu_threshold(image, block_size, c):
 def optimal_threshold(image):
     # Extract intensities of the four corners
     height, width = image.shape
+    # Check if the image is empty
+    if height == 0 or width == 0:
+        # Handle the case of an empty image
+        # You can return a default threshold and a blank binary image, or raise an error
+        return np.zeros_like(image, dtype=np.uint8), 0
     corners = [
         image[0, 0],
         image[0, width - 1],
         image[height - 1, 0],
         image[height - 1, width - 1],
     ]
+
     threshold = np.mean(corners)
 
     while True:
@@ -92,7 +98,7 @@ def adaptive_local_threshold(image, block_size, c):
 
 # Example usage:
 # Assuming 'image' is your grayscale input image
-image = cv2.imread("./playground/cameraman.png", cv2.IMREAD_GRAYSCALE)
+image = cv2.imread("./playground/cameraman.jpg", cv2.IMREAD_GRAYSCALE)
 
 # Apply Otsu's thresholding using the custom implementation
 binary_image_otsu_custom, th = otsu_threshold(image)
@@ -107,7 +113,7 @@ th3, binary_image_otsu_opencv = cv2.threshold(
 )
 print(f"OPENCV: {th3}")
 # Define the block size for local Otsu thresholding
-block_size = 21  # Adjust this value as needed
+block_size = 11  # Adjust this value as needed
 c = 7
 # Apply local Otsu's thresholding using the custom implementation
 binary_image_local_otsu_custom = local_otsu_threshold(image, block_size, c)
