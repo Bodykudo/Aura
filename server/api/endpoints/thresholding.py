@@ -25,30 +25,36 @@ async def apply_thresholding(image_id: str, thresholding: ThresholdingModel):
     thresholded_image = None
 
     if thresholding.type == "optimal":
-        
         if thresholding.scope == "global":
             thresholded_image = Thresholding.optimal_thresholding(image_path)[0]
         elif thresholding.scope == "local":
             thresholded_image = Thresholding.local_thresholding(
-                image_path, thresholding.type, window_size=thresholding.windowSize
+                image_path,
+                thresholding.type,
+                window_size=thresholding.windowSize,
+                offset=thresholding.offset,
             )
-            
+
     elif thresholding.type == "otsu":
-        
         if thresholding.scope == "global":
             thresholded_image = Thresholding.otsu_thresholding(image_path)[0]
         elif thresholding.scope == "local":
             thresholded_image = Thresholding.local_thresholding(
-                image_path, thresholding.type, window_size=thresholding.windowSize
+                image_path,
+                thresholding.type,
+                window_size=thresholding.windowSize,
+                offset=thresholding.offset,
             )
-            
-    elif thresholding.type == "spectral":
 
+    elif thresholding.type == "spectral":
         if thresholding.scope == "global":
             thresholded_image = Thresholding.spectral_thresholding(image_path)
         elif thresholding.scope == "local":
             thresholded_image = Thresholding.local_thresholding(
-                image_path, thresholding.type, window_size=thresholding.windowSize
+                image_path,
+                thresholding.type,
+                window_size=thresholding.windowSize,
+                offset=thresholding.offset,
             )
 
     thresholded_image = convert_image(thresholded_image)

@@ -28,29 +28,17 @@ import { useToast } from '@renderer/components/ui/use-toast';
 import placeholder from '@renderer/assets/placeholder.png';
 
 const thresholdingSchema = z.object({
-  type: z.enum(['local', 'global']).nullable(),
+  type: z.enum(['optimal', 'otsu', 'spectral']).nullable(),
+  scope: z.enum(['global', 'local']).nullable(),
   threshold: z.number(),
-  thresholdMargin: z.number(),
-  blockSize: z.number()
+  windowSize: z.number(),
+  offset: z.number()
 });
 
 const thresholdingOptions = [
-  { label: 'Local Thresholding', value: 'local' },
-  { label: 'Global Thresholding', value: 'global' }
-];
-
-const inputs = [
-  {
-    value: 'local',
-    inputs: [
-      { label: 'Thresholding Margin', name: 'thresholdMargin', min: 0, max: 255, step: 1 },
-      { label: 'Block Size', name: 'blockSize', min: 1, max: 13, step: 2 }
-    ]
-  },
-  {
-    value: 'global',
-    inputs: [{ label: 'Threshold', name: 'threshold', min: 0, max: 255, step: 1 }]
-  }
+  { label: 'Optimal Thresholding', value: 'optimal' },
+  { label: 'Otsu Thresholding', value: 'otsu' },
+  { label: 'Spectral Thresholding', value: 'spectral' }
 ];
 
 function Thresholding() {
@@ -69,8 +57,8 @@ function Thresholding() {
     resolver: zodResolver(thresholdingSchema),
     defaultValues: {
       threshold: 127,
-      thresholdMargin: 7,
-      blockSize: 11
+      windowSize: 11,
+      offset: 0
     }
   });
 
@@ -116,9 +104,9 @@ function Thresholding() {
   const onSubmit = (data: z.infer<typeof thresholdingSchema>) => {
     const body = {
       type: data.type,
-      threshold: data.threshold,
-      thresholdMargin: data.thresholdMargin,
-      blockSize: data.blockSize
+      scope: data.scope,
+      windowSize: data.windowSize,
+      offset: data.offset
     };
 
     setIsProcessing(true);
@@ -160,7 +148,6 @@ function Thresholding() {
                         <SelectContent>
                           <SelectGroup>
                             <SelectLabel>Thresholding</SelectLabel>
-
                             {thresholdingOptions.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
@@ -174,34 +161,72 @@ function Thresholding() {
                 />
 
                 <div className="flex flex-wrap gap-2">
-                  {inputs.find((input) => input.value === form.watch('type')) &&
-                    inputs
-                      .find((input) => input.value === form.watch('type'))
-                      ?.inputs.map((input) => {
-                        return (
-                          <FormField
-                            key={input.name}
-                            name={input.name}
-                            render={({ field }) => (
-                              <FormItem className="w-[150px]">
-                                <Label htmlFor={input.name}>{input.label}</Label>
-                                <FormControl className="p-2">
-                                  <Input
-                                    type="number"
-                                    disabled={isProcessing}
-                                    id={input.name}
-                                    min={input.min}
-                                    max={input.max}
-                                    step={input.step}
-                                    {...field}
-                                    onChange={(e) => field.onChange(Number(e.target.value))}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        );
-                      })}
+                  {form.watch('type') && (
+                    <FormField
+                      control={form.control}
+                      name="scope"
+                      render={({ field }) => (
+                        <FormItem className="w-[250px]">
+                          <Label htmlFor="scope">Thrsholding Scope</Label>
+                          <Select disabled={isProcessing} onValueChange={field.onChange}>
+                            <FormControl id="scope">
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select thresholding scope" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectLabel>Scope</SelectLabel>
+                                <SelectItem value="global">Global Thresholding</SelectItem>
+                                <SelectItem value="local">Local Thresholding</SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  {form.watch('scope') === 'local' && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="windowSize"
+                        render={({ field }) => (
+                          <FormItem className="w-[150px]">
+                            <Label htmlFor="windowSize">Window Size</Label>
+                            <Input
+                              id="windowSize"
+                              type="number"
+                              disabled={isProcessing}
+                              min={3}
+                              max={51}
+                              step={2}
+                              {...field}
+                            />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="offset"
+                        render={({ field }) => (
+                          <FormItem className="w-[150px]">
+                            <Label htmlFor="offset">Offset</Label>
+                            <Input
+                              id="offset"
+                              type="number"
+                              disabled={isProcessing}
+                              min={0}
+                              max={10}
+                              step={1}
+                              {...field}
+                            />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
               <Button disabled={!filesIds[0] || isProcessing} type="submit">
