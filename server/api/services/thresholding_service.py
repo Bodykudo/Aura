@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from api.utils import read_image
+from api.utils import read_image, find_spectral_thresholds
 
 
 class Thresholding:
@@ -18,40 +18,12 @@ class Thresholding:
 
     @staticmethod
     def find_spectral_thresholds(histogram: np.ndarray, global_mean_intensity: float):
-        max_variance = 0
-        for high_threshold in range(1, 256):
-            for low_threshold in range(1, high_threshold):
-                weights = np.array(
-                    [
-                        histogram[:low_threshold].sum(),
-                        histogram[low_threshold:high_threshold].sum(),
-                        histogram[high_threshold:].sum(),
-                    ]
-                )
-                if weights[1] == 0:  # Skip if weight is 0 to avoid division by zero
-                    continue
-                means = np.array(
-                    [
-                        np.dot(np.arange(0, low_threshold), histogram[:low_threshold])
-                        / (weights[0] + 1e-6),
-                        np.dot(
-                            np.arange(low_threshold, high_threshold),
-                            histogram[low_threshold:high_threshold],
-                        )
-                        / (weights[1] + 1e-6),
-                        np.dot(
-                            np.arange(high_threshold, 256), histogram[high_threshold:]
-                        )
-                        / (weights[2] + 1e-6),
-                    ]
-                )
-                variance = np.dot(weights, (means - global_mean_intensity) ** 2)
-                if variance > max_variance:
-                    max_variance = variance
-                    optimal_low_threshold, optimal_high_threshold = (
-                        low_threshold,
-                        high_threshold,
-                    )
+        optimal_high_threshold, optimal_low_threshold = 0, 0
+        optimal_low_threshold, optimal_high_threshold = find_spectral_thresholds(
+            histogram, global_mean_intensity
+        )
+        if optimal_low_threshold == 0 or optimal_high_threshold == 0:
+            raise ValueError("No valid thresholds found")
 
         return optimal_low_threshold, optimal_high_threshold
 

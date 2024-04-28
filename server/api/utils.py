@@ -117,3 +117,41 @@ def compute_distances(feature_space, current_mean_array):
             distance += (current_mean_array[0][j] - feature_space[i][j]) ** 2
         distances[i] = distance**0.5
     return distances
+
+
+@jit(nopython=True)  # Apply Numba JIT optimization
+def find_spectral_thresholds(histogram, global_mean_intensity):
+    max_variance = 0
+    optimal_high_threshold, optimal_low_threshold = 0, 0
+    for high_threshold in range(1, 256):
+        for low_threshold in range(1, high_threshold):
+            weights = np.array(
+                [
+                    histogram[:low_threshold].sum(),
+                    histogram[low_threshold:high_threshold].sum(),
+                    histogram[high_threshold:].sum(),
+                ],
+                dtype=np.float64,
+            )
+            means = np.array(
+                [
+                    np.sum(np.arange(low_threshold) * histogram[:low_threshold])
+                    / (np.sum(histogram[:low_threshold]) + 1e-6),
+                    np.sum(
+                        np.arange(low_threshold, high_threshold)
+                        * histogram[low_threshold:high_threshold]
+                    )
+                    / (np.sum(histogram[low_threshold:high_threshold]) + 1e-6),
+                    np.sum(np.arange(high_threshold, 256) * histogram[high_threshold:])
+                    / (np.sum(histogram[high_threshold:]) + 1e-6),
+                ],
+                dtype=np.float64,
+            )  # Cast to float64
+            variance = np.dot(weights, (means - global_mean_intensity) ** 2)
+            if variance > max_variance:
+                max_variance = variance
+                optimal_low_threshold, optimal_high_threshold = (
+                    low_threshold,
+                    high_threshold,
+                )
+    return optimal_low_threshold, optimal_high_threshold
