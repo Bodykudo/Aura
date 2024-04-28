@@ -202,6 +202,7 @@ function Thresholding() {
                               max={51}
                               step={2}
                               {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
                             />
                           </FormItem>
                         )}
@@ -221,6 +222,7 @@ function Thresholding() {
                               max={10}
                               step={1}
                               {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
                             />
                           </FormItem>
                         )}

@@ -5,7 +5,6 @@ from api.utils import read_image, find_spectral_thresholds
 
 
 class Thresholding:
-
     @staticmethod
     def preprocess(image):
         grayscale_image = (
@@ -72,18 +71,15 @@ class Thresholding:
                 if thresholding_type == "optimal":
                     _, threshold = Thresholding.optimal_thresholding(sub_image)
                     threshold = threshold - offset
-                    print("threshold", threshold)
                     local_thresholded = (sub_image > threshold).astype(np.uint8) * 255
 
                 elif thresholding_type == "otsu":
                     _, threshold = Thresholding.otsu_thresholding(sub_image)
                     threshold = threshold - offset
-                    print("threshold", threshold)
                     local_thresholded = (sub_image > threshold).astype(np.uint8) * 255
 
                 elif thresholding_type == "spectral":
                     local_thresholded = Thresholding.spectral_thresholding(sub_image)
-                    print("threshold", local_thresholded.shape)
 
                 thresholded_image[
                     y : min(y + step_y, image_height), x : min(x + step_x, image_width)
