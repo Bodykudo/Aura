@@ -5,6 +5,7 @@ from api.utils import read_image
 
 
 class Thresholding:
+
     @staticmethod
     def preprocess(image):
         grayscale_image = (
@@ -19,7 +20,7 @@ class Thresholding:
     def find_spectral_thresholds(histogram: np.ndarray, global_mean_intensity: float):
         max_variance = 0
         for high_threshold in range(1, 256):
-            for low_threshold in range(high_threshold):
+            for low_threshold in range(1, high_threshold):
                 weights = np.array(
                     [
                         histogram[:low_threshold].sum(),
@@ -32,16 +33,16 @@ class Thresholding:
                 means = np.array(
                     [
                         np.dot(np.arange(0, low_threshold), histogram[:low_threshold])
-                        / weights[0],
+                        / (weights[0] + 1e-6),
                         np.dot(
                             np.arange(low_threshold, high_threshold),
                             histogram[low_threshold:high_threshold],
                         )
-                        / weights[1],
+                        / (weights[1] + 1e-6),
                         np.dot(
                             np.arange(high_threshold, 256), histogram[high_threshold:]
                         )
-                        / weights[2],
+                        / (weights[2] + 1e-6),
                     ]
                 )
                 variance = np.dot(weights, (means - global_mean_intensity) ** 2)
@@ -66,7 +67,7 @@ class Thresholding:
     @staticmethod
     def spectral_thresholding(image_or_path):
         if isinstance(image_or_path, str):
-            image = read_image(image_or_path)
+            image = read_image(image_or_path, grayscale=True)  # Global default
         else:
             image = image_or_path
 
@@ -83,9 +84,9 @@ class Thresholding:
 
     @staticmethod
     def local_thresholding(
-        image_path: str, thresholding_type: str, window_size: int, offset: int = 0
+        image_path: str, thresholding_type: str, window_size: int, offset: int
     ):
-        image = read_image(image_path)
+        image = read_image(image_path, grayscale=True)
         thresholded_image = np.zeros(image.shape[:2], dtype=np.uint8)
         image_height, image_width = image.shape[:2]
         window = (window_size, window_size)
@@ -99,15 +100,18 @@ class Thresholding:
                 if thresholding_type == "optimal":
                     _, threshold = Thresholding.optimal_thresholding(sub_image)
                     threshold = threshold - offset
-                    local_thresholded = (sub_image > threshold).astype(np.uint8)
+                    print("threshold", threshold)
+                    local_thresholded = (sub_image > threshold).astype(np.uint8) * 255
 
                 elif thresholding_type == "otsu":
                     _, threshold = Thresholding.otsu_thresholding(sub_image)
                     threshold = threshold - offset
-                    local_thresholded = (sub_image > threshold).astype(np.uint8)
+                    print("threshold", threshold)
+                    local_thresholded = (sub_image > threshold).astype(np.uint8) * 255
 
                 elif thresholding_type == "spectral":
                     local_thresholded = Thresholding.spectral_thresholding(sub_image)
+                    print("threshold", local_thresholded.shape)
 
                 thresholded_image[
                     y : min(y + step_y, image_height), x : min(x + step_x, image_width)
@@ -118,7 +122,7 @@ class Thresholding:
     @staticmethod
     def optimal_thresholding(image_or_path):
         if isinstance(image_or_path, str):
-            image = read_image(image_or_path)
+            image = read_image(image_or_path, grayscale=True)
         else:
             image = image_or_path
 
@@ -145,7 +149,7 @@ class Thresholding:
     @staticmethod
     def otsu_thresholding(image_or_path):
         if isinstance(image_or_path, str):
-            image = read_image(image_or_path)
+            image = read_image(image_or_path, grayscale=True)
         else:
             image = image_or_path
 
