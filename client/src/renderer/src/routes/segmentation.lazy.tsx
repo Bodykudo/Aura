@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -26,6 +26,7 @@ import useGlobalState from '@renderer/hooks/useGlobalState';
 import { useToast } from '@renderer/components/ui/use-toast';
 
 import placeholder from '@renderer/assets/placeholder.png';
+import SeededInput from '@renderer/components/SeededInput';
 
 const filtersSchema = z.object({
   type: z.enum(['kmeans', 'meanShift', 'agglomerative', 'regionGrowing']).nullable(),
@@ -71,7 +72,7 @@ const inputs = [
     value: 'regionGrowing',
     inputs: [
       { label: 'Threshold', name: 'threshold', min: 1, max: 100, step: 1 },
-      { label: 'Neighbours Number', name: 'neighboursNumber', min: 4, max: 8, step: 4 }      
+      { label: 'Neighbours Number', name: 'neighboursNumber', min: 4, max: 8, step: 4 }
     ]
   }
 ];
@@ -81,12 +82,15 @@ function Segmentation() {
 
   const {
     filesIds,
+    uploadedImagesURLs,
     setFileId,
     setUploadedImageURL,
     setProcessedImageURL,
     isProcessing,
     setIsProcessing
   } = useGlobalState();
+
+  const [seededPoints, setSeededPoints] = useState<{ x: number; y: number }[]>([]);
 
   const form = useForm<z.infer<typeof filtersSchema>>({
     resolver: zodResolver(filtersSchema),
@@ -149,8 +153,10 @@ function Segmentation() {
       threshold: data.threshold,
       clustersNumber: data.clustersNumber,
       colorThreshold: data.colorThreshold,
-      neighboursNumber: data.neighboursNumber
+      seedPoints: seededPoints
     };
+
+    console.log(body);
 
     setIsProcessing(true);
     ipcRenderer.send('process:image', {
@@ -241,7 +247,15 @@ function Segmentation() {
           </Form>
         </div>
         <div className="flex flex-col md:flex-row gap-4 w-full">
-          <Dropzone index={0} />
+          {uploadedImagesURLs[0] && form.watch('type') === 'regionGrowing' ? (
+            <SeededInput
+              imageUrl={uploadedImagesURLs[0]}
+              dots={seededPoints}
+              setDots={setSeededPoints}
+            />
+          ) : (
+            <Dropzone index={0} />
+          )}
           <OutputImage index={0} placeholder={placeholder} />
         </div>
       </div>

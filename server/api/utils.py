@@ -155,3 +155,66 @@ def find_spectral_thresholds(histogram, global_mean_intensity):
                     high_threshold,
                 )
     return optimal_low_threshold, optimal_high_threshold
+
+
+@jit(nopython=True)
+def calculate_distance(a, b):
+    return np.sqrt(
+        np.power(a[0] - b[0], 2) + np.power(a[1] - b[1], 2) + np.power(a[2] - b[2], 2)
+    )
+
+
+@jit(nopython=True)
+def merge_clusters(a, b):
+    r = (a[0] + b[0]) // 2
+    g = (a[1] + b[1]) // 2
+    b = (a[2] + b[2]) // 2
+    return (r, g, b)
+
+
+@jit(nopython=True, parallel=True)
+def find_closest_clusters(clusters):
+    min_dist = 1e10  # A large float value
+    min_i, min_j = 0, 0
+    for i in prange(len(clusters)):
+        for j in prange(i + 1, len(clusters)):
+            dist = calculate_distance(clusters[i], clusters[j])
+            if dist < min_dist:
+                min_dist = dist
+                min_i, min_j = i, j
+    return min_i, min_j
+
+
+@jit(nopython=True)
+def find_nearest_cluster(pixel, clusters):
+    min_cluster = 0
+    min_dist = 1e10  # A large float value
+    for k in prange(len(clusters)):
+        dist = calculate_distance(pixel, clusters[k])
+        if dist < min_dist:
+            min_dist = dist
+            min_cluster = k
+    return min_cluster
+
+
+@jit(
+    nopython=True,
+)
+def agglomerative_clustering(clusters, number_of_clusters):
+    while len(clusters) > number_of_clusters:
+        print("Number of clusters: ", len(clusters))
+        # Find the two closest clusters
+        min_i, min_j = find_closest_clusters(clusters)
+
+        # Merge the two clusters
+        clusters[min_i] = merge_clusters(clusters[min_i], clusters[min_j])
+
+        # Remove the merged cluster
+        new_clusters = np.empty(
+            (len(clusters) - 1, clusters.shape[1]), dtype=clusters.dtype
+        )
+        new_clusters[:min_j] = clusters[:min_j]
+        new_clusters[min_j:] = clusters[min_j + 1 :]
+        clusters = new_clusters
+
+    return clusters

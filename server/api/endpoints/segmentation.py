@@ -34,12 +34,14 @@ async def apply_segmentation(image_id: str, segmentation: SegmentationModel):
             window_size=segmentation.windowSize,
             threshold=segmentation.threshold / 100,
         )
-    elif segmentation.type == "regionGrowing" :
+    elif segmentation.type == "regionGrowing":
+        seed_points = [
+            (int(point.y), int(point.x)) for point in segmentation.seedPoints
+        ]
         segmented_image = Segmentation.region_growing_segmentaion(
             image_path=image_path,
-            threshold=segmentation.threshold,
-            seed_points=segmentation.seed_points,
-            
+            thershold=segmentation.threshold,
+            seed_points=seed_points,
         )
 
     segmented_image = convert_image(segmented_image)

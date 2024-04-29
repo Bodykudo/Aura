@@ -1,13 +1,13 @@
-import numpy as np
 import cv2
 import numpy as np
-import cv2
+from numba import prange
 
 from api.utils import (
+    agglomerative_clustering,
+    find_nearest_cluster,
     compute_distances,
     euclidean_distance,
     read_image,
-
 )
 
 
@@ -105,47 +105,57 @@ class Segmentation:
                 current_mean_array[0, :3] = mean_color
                 current_mean_array[0, 3:] = mean_position
         return cv2.cvtColor(segmented_image, cv2.COLOR_BGR2RGB)
-    
 
     @staticmethod
-    def get_8_connected(x, y, shape):    
+    def get_8_connected(x, y, shape):
         xmax = shape[0] - 1
         ymax = shape[1] - 1
-        
+
         connected_pixels = []
-        
+
         for dx in range(3):
             for dy in range(3):
                 connected_pixel_x = x + dx - 1
                 connected_pixel_y = y + dy - 1
-                if (0 <= connected_pixel_x <= xmax) and (0 <= connected_pixel_y <= ymax) and \
-                not (connected_pixel_x == x and connected_pixel_y == y):
+                if (
+                    (0 <= connected_pixel_x <= xmax)
+                    and (0 <= connected_pixel_y <= ymax)
+                    and not (connected_pixel_x == x and connected_pixel_y == y)
+                ):
                     connected_pixels.append((connected_pixel_x, connected_pixel_y))
-        
+
         return connected_pixels
 
     @staticmethod
-    def region_growing_segmentaion(image_path: str, thershold: int, seed_points, test=lambda seed_x, seed_y, x, y, img, outimg: img[x, y] != 0, colormap=None):
+    def region_growing_segmentaion(
+        image_path: str,
+        thershold: int,
+        seed_points: list[tuple],
+        test=lambda seed_x, seed_y, x, y, img, outimg: img[x, y] != 0,
+        colormap=None,
+    ):
         original_image = cv2.imread(image_path)
-        image_gray = cv2.cvtColor(original_image , cv2.COLOR_BGR2GRAY)
-        ret, img = cv2.threshold(image_gray, thershold, 255, cv2.THRESH_BINARY)
+        image_gray = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+        image_gray = read_image(image_path, grayscale=True)
+        _, img = cv2.threshold(image_gray, thershold, 255, cv2.THRESH_BINARY)
         processed = np.full((img.shape[0], img.shape[1]), False)
-        
+
         if colormap is None:
             outimg = np.zeros_like(img)
         else:
-            outimg = np.zeros((img.shape[0], img.shape[1], colormap.shape[1]), dtype=np.uint8)
-        
+            outimg = np.zeros(
+                (img.shape[0], img.shape[1], colormap.shape[1]), dtype=np.uint8
+            )
+
         for index, pix in enumerate(seed_points):
             processed[pix[0], pix[1]] = True
             if colormap is None:
                 outimg[pix[0], pix[1]] = img[pix[0], pix[1]]
             else:
                 outimg[pix[0], pix[1]] = colormap[index % len(colormap)]
-        
+
         while len(seed_points) > 0:
             pix = seed_points[0]
-                
             for coord in Segmentation.get_8_connected(pix[0], pix[1], img.shape):
                 if not processed[coord[0], coord[1]]:
                     test_result = test(pix[0], pix[1], coord[0], coord[1], img, outimg)
@@ -154,14 +164,38 @@ class Segmentation:
                         if not processed[coord[0], coord[1]]:
                             seed_points.append(coord)
                         processed[coord[0], coord[1]] = True
-                        
+
             seed_points.pop(0)
 
-        contours, _ = cv2.findContours(processed.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(
+            processed.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
         image_with_contours = original_image.copy()
-        # Draw contours on the original image
         for contour in contours:
             cv2.drawContours(image_with_contours, [contour], -1, (0, 255, 0), 2)
-        
+
         return image_with_contours
 
+    @staticmethod
+    def agglomerative_segmentation(image_path: str, number_of_clusters: int):
+        image = read_image(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2Luv)
+        segmentedImage = np.zeros(image.shape, dtype=np.uint8)
+
+        clusters = image.reshape(-1, 3)
+
+        clusters = agglomerative_clustering(clusters, number_of_clusters)
+
+        # Assign labels to the pixels
+        labels = np.zeros((image.shape[0], image.shape[1]), dtype=np.int32)
+        for i in prange(image.shape[0]):
+            for j in prange(image.shape[1]):
+                labels[i, j] = find_nearest_cluster(image[i, j], clusters)
+
+        for i in prange(image.shape[0]):
+            for j in prange(image.shape[1]):
+                color = clusters[labels[i, j]]
+                segmentedImage[i, j] = color
+
+        segmentedImage = cv2.cvtColor(segmentedImage, cv2.COLOR_Luv2RGB)
+        return segmentedImage

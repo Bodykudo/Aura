@@ -1,4 +1,10 @@
 from pydantic import BaseModel
+from typing import List, Dict
+
+
+class Point(BaseModel):
+    x: float
+    y: float
 
 
 class SegmentationModel(BaseModel):
@@ -9,4 +15,4 @@ class SegmentationModel(BaseModel):
     threshold: int
     clustersNumber: int
     colorThreshold: int
-    seed_points: int
+    seedPoints: List[Point]
