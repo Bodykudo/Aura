@@ -23,7 +23,7 @@ import {
 import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
-import { useToast } from '@renderer/components/ui/use-toast';
+import useHandleProcessing from '@renderer/hooks/useHandleProcessing';
 
 import placeholder from '@renderer/assets/placeholder.png';
 import placeholder2 from '@renderer/assets/placeholder2.png';
@@ -38,14 +38,11 @@ const hybridSchema = z.object({
 function Hybrid() {
   const ipcRenderer = (window as any).ipcRenderer;
 
-  const {
-    filesIds,
-    setFileId,
-    setUploadedImageURL,
-    setProcessedImageURL,
-    isProcessing,
-    setIsProcessing
-  } = useGlobalState();
+  const { filesIds, setProcessedImageURL, isProcessing, setIsProcessing, reset } = useGlobalState();
+  const { data } = useHandleProcessing({
+    fallbackFn: () => setIsProcessing(false),
+    errorMessage: "Your images couldn't be processed. Please try again."
+  });
 
   const form = useForm<z.infer<typeof hybridSchema>>({
     resolver: zodResolver(hybridSchema),
@@ -56,56 +53,25 @@ function Hybrid() {
     }
   });
 
-  const { toast } = useToast();
-
   useEffect(() => {
-    setIsProcessing(false);
-    setFileId(0, null);
-    setFileId(1, null);
-    setUploadedImageURL(0, null);
-    setUploadedImageURL(1, null);
-    setProcessedImageURL(0, null);
-    setProcessedImageURL(1, null);
-    setProcessedImageURL(2, null);
+    reset();
   }, []);
 
   useEffect(() => {
-    const imageReceivedListener = (event: any) => {
-      if (event.data.filteredImage1) {
-        setProcessedImageURL(0, event.data.filteredImage1);
+    if (data) {
+      if (data.filteredImage1) {
+        setProcessedImageURL(0, data.filteredImage1);
       }
 
-      if (event.data.filteredImage2) {
-        setProcessedImageURL(1, event.data.filteredImage2);
+      if (data.filteredImage2) {
+        setProcessedImageURL(1, data.filteredImage2);
       }
 
-      if (event.data.hybridImage) {
-        setProcessedImageURL(2, event.data.hybridImage);
+      if (data.hybridImage) {
+        setProcessedImageURL(2, data.hybridImage);
       }
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:received', imageReceivedListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
-
-  useEffect(() => {
-    const imageErrorListener = () => {
-      toast({
-        title: 'Something went wrong',
-        description: "Your image couldn't be filtered, please try again later.",
-        variant: 'destructive'
-      });
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:error', imageErrorListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
+    }
+  }, [data]);
 
   const onSubmit = (data: z.infer<typeof hybridSchema>) => {
     const body = {

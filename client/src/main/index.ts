@@ -71,11 +71,12 @@ ipcMain.on('upload:data', async (event, args) => {
 ipcMain.on('process:image', async (event, args) => {
   const body = args.body;
   const url = args.url;
-  const response = await axios.post(`${import.meta.env.MAIN_VITE_PUBLIC_API_URL}${url}`, body);
-  if (response.status !== 200) {
+  try {
+    const response = await axios.post(`${import.meta.env.MAIN_VITE_PUBLIC_API_URL}${url}`, body);
+    event.reply('image:received', { data: response.data });
+    return true;
+  } catch (error) {
     event.reply('image:error');
     return false;
   }
-  event.reply('image:received', { data: response.data });
-  return true;
 });

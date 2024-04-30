@@ -23,7 +23,7 @@ import {
 import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
-import { useToast } from '@renderer/components/ui/use-toast';
+import useHandleProcessing from '@renderer/hooks/useHandleProcessing';
 
 import placeholder from '@renderer/assets/placeholder.png';
 
@@ -71,14 +71,11 @@ const inputs = [
 function SIFT() {
   const ipcRenderer = (window as any).ipcRenderer;
 
-  const {
-    filesIds,
-    setFileId,
-    setUploadedImageURL,
-    setProcessedImageURL,
-    isProcessing,
-    setIsProcessing
-  } = useGlobalState();
+  const { filesIds, setProcessedImageURL, isProcessing, setIsProcessing, reset } = useGlobalState();
+  const { data } = useHandleProcessing({
+    fallbackFn: () => setIsProcessing(false),
+    errorMessage: "Your images couldn't be processed. Please try again."
+  });
 
   const form = useForm<z.infer<typeof siftSchema>>({
     resolver: zodResolver(siftSchema),
@@ -94,49 +91,20 @@ function SIFT() {
 
   const [elapsedTime, setElapsedTime] = useState<number | null>(null);
 
-  const { toast } = useToast();
-
   useEffect(() => {
-    setIsProcessing(false);
-    setFileId(0, null);
-    setFileId(1, null);
-    setUploadedImageURL(0, null);
-    setUploadedImageURL(1, null);
-    setProcessedImageURL(0, null);
+    reset();
   }, []);
 
   useEffect(() => {
-    const imageReceivedListener = (event: any) => {
-      if (event.data.image) {
-        setProcessedImageURL(0, event.data.image);
+    if (data) {
+      if (data.image) {
+        setProcessedImageURL(0, data.image);
       }
-      if (event.data.time) {
-        setElapsedTime(event.data.time);
+      if (data.time) {
+        setElapsedTime(data.time);
       }
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:received', imageReceivedListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
-
-  useEffect(() => {
-    const imageErrorListener = () => {
-      toast({
-        title: 'Something went wrong',
-        description: "Your images couldn't be processed, please try again later.",
-        variant: 'destructive'
-      });
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:error', imageErrorListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
+    }
+  }, [data]);
 
   const onSubmit = (data: z.infer<typeof siftSchema>) => {
     let body = {};

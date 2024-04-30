@@ -25,7 +25,7 @@ import { Button } from '@renderer/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@renderer/components/ui/popover';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
-import { useToast } from '@renderer/components/ui/use-toast';
+import useHandleProcessing from '@renderer/hooks/useHandleProcessing';
 
 import placeholder from '@renderer/assets/placeholder3.png';
 
@@ -73,14 +73,11 @@ const inputs = [
 function Hough() {
   const ipcRenderer = (window as any).ipcRenderer;
 
-  const {
-    filesIds,
-    setFileId,
-    setUploadedImageURL,
-    setProcessedImageURL,
-    isProcessing,
-    setIsProcessing
-  } = useGlobalState();
+  const { filesIds, setProcessedImageURL, isProcessing, setIsProcessing, reset } = useGlobalState();
+  const { data } = useHandleProcessing({
+    fallbackFn: () => setIsProcessing(false),
+    errorMessage: "Hough transform couldn't be applied to your image. Please try again."
+  });
 
   const form = useForm({
     resolver: zodResolver(houghSchema),
@@ -95,44 +92,15 @@ function Hough() {
     }
   });
 
-  const { toast } = useToast();
-
   useEffect(() => {
-    setIsProcessing(false);
-    setFileId(0, null);
-    setUploadedImageURL(0, null);
-    setProcessedImageURL(0, null);
+    reset();
   }, []);
 
   useEffect(() => {
-    const imageReceivedListener = (event: any) => {
-      if (event.data.image) {
-        setProcessedImageURL(0, event.data.image);
-      }
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:received', imageReceivedListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
-
-  useEffect(() => {
-    const imageErrorListener = () => {
-      toast({
-        title: 'Something went wrong',
-        description: "Thresholding couldn't be applied on your image, please try again later.",
-        variant: 'destructive'
-      });
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:error', imageErrorListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
+    if (data && data.image) {
+      setProcessedImageURL(0, data.image);
+    }
+  }, [data]);
 
   const onSubmit = (data: z.infer<typeof houghSchema>) => {
     const body = {

@@ -7,6 +7,7 @@ import { PieChart } from 'lucide-react';
 
 import Heading from '@renderer/components/Heading';
 import Dropzone from '@renderer/components/Dropzone';
+import SeedInput from '@renderer/components/SeedInput';
 import OutputImage from '@renderer/components/OutputImage';
 import { Form, FormControl, FormField, FormItem } from '@renderer/components/ui/form';
 import { Input } from '@renderer/components/ui/input';
@@ -23,10 +24,9 @@ import {
 import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
-import { useToast } from '@renderer/components/ui/use-toast';
+import useHandleProcessing from '@renderer/hooks/useHandleProcessing';
 
 import placeholder from '@renderer/assets/placeholder.png';
-import SeedInput from '@renderer/components/SeedInput';
 
 const filtersSchema = z.object({
   type: z.enum(['kmeans', 'meanShift', 'agglomerative', 'regionGrowing']).nullable(),
@@ -76,15 +76,11 @@ const inputs = [
 function Segmentation() {
   const ipcRenderer = (window as any).ipcRenderer;
 
-  const {
-    filesIds,
-    uploadedImagesURLs,
-    setFileId,
-    setUploadedImageURL,
-    setProcessedImageURL,
-    isProcessing,
-    setIsProcessing
-  } = useGlobalState();
+  const { filesIds, setProcessedImageURL, isProcessing, setIsProcessing, reset } = useGlobalState();
+  const { data } = useHandleProcessing({
+    fallbackFn: () => setIsProcessing(false),
+    errorMessage: "Your image couldn't be segmented. Please try again."
+  });
 
   const [seedPoints, setSeedPoints] = useState<{ x: number; y: number }[]>([]);
 
@@ -100,44 +96,15 @@ function Segmentation() {
     }
   });
 
-  const { toast } = useToast();
-
   useEffect(() => {
-    setIsProcessing(false);
-    setFileId(0, null);
-    setUploadedImageURL(0, null);
-    setProcessedImageURL(0, null);
+    reset();
   }, []);
 
   useEffect(() => {
-    const imageReceivedListener = (event: any) => {
-      if (event.data.image) {
-        setProcessedImageURL(0, event.data.image);
-      }
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:received', imageReceivedListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
-
-  useEffect(() => {
-    const imageErrorListener = () => {
-      toast({
-        title: 'Something went wrong',
-        description: "Your image couldn't be segmented, please try again later.",
-        variant: 'destructive'
-      });
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:error', imageErrorListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
+    if (data && data.image) {
+      setProcessedImageURL(0, data.image);
+    }
+  }, [data]);
 
   const onSubmit = (data: z.infer<typeof filtersSchema>) => {
     const body = {

@@ -9,6 +9,7 @@ interface IUseGlobalState {
   setProcessedImageURL: (index: number, imageURL: string | null) => void;
   isProcessing: boolean;
   setIsProcessing: (isProcessing: boolean) => void;
+  reset: () => void;
 }
 
 const useGlobalState = create<IUseGlobalState>((set) => ({
@@ -26,7 +27,14 @@ const useGlobalState = create<IUseGlobalState>((set) => ({
       processedImagesURLs: state.processedImagesURLs.map((url, i) => (i === index ? imageURL : url))
     })),
   isProcessing: false,
-  setIsProcessing: (isProcessing) => set({ isProcessing })
+  setIsProcessing: (isProcessing) => set({ isProcessing }),
+  reset: () =>
+    set({
+      filesIds: [null, null],
+      uploadedImagesURLs: [null, null, null],
+      processedImagesURLs: [null, null, null],
+      isProcessing: false
+    })
 }));
 
 export default useGlobalState;

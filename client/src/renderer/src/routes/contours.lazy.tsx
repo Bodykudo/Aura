@@ -15,7 +15,7 @@ import { Label } from '@renderer/components/ui/label';
 import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
-import { useToast } from '@renderer/components/ui/use-toast';
+import useHandleProcessing from '@renderer/hooks/useHandleProcessing';
 
 import placeholder from '@renderer/assets/placeholder2.png';
 
@@ -45,13 +45,16 @@ function Contours() {
 
   const {
     filesIds,
-    setFileId,
-    setUploadedImageURL,
+    uploadedImagesURLs,
     setProcessedImageURL,
     isProcessing,
     setIsProcessing,
-    uploadedImagesURLs
+    reset
   } = useGlobalState();
+  const { data } = useHandleProcessing({
+    fallbackFn: () => setIsProcessing(false),
+    errorMessage: "Acitve contours couldn't be applied to your image. Please try again."
+  });
 
   const [perimeter, setPerimeter] = useState<number | null>(null);
   const [area, setArea] = useState<number | null>(null);
@@ -75,52 +78,25 @@ function Contours() {
   const setCenterY = (y: number) => form.setValue('centerY', y);
   const setRadius = (r: number) => form.setValue('radius', r);
 
-  const { toast } = useToast();
-
   useEffect(() => {
-    setIsProcessing(false);
-    setFileId(0, null);
-    setUploadedImageURL(0, null);
-    setProcessedImageURL(0, null);
+    reset();
   }, []);
 
   useEffect(() => {
-    const imageReceivedListener = (event: any) => {
-      if (event.data.image) {
-        setProcessedImageURL(0, event.data.image);
+    if (data) {
+      if (data.image) {
+        setProcessedImageURL(0, data.image);
       }
-      if (event.data.perimeter) {
-        const outputPerimeter: number = event.data.perimeter;
+      if (data.perimeter) {
+        const outputPerimeter: number = data.perimeter;
         setPerimeter(outputPerimeter);
       }
-      if (event.data.area) {
-        const outputArea: number = event.data.area;
+      if (data.area) {
+        const outputArea: number = data.area;
         setArea(outputArea);
       }
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:received', imageReceivedListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
-
-  useEffect(() => {
-    const imageErrorListener = () => {
-      toast({
-        title: 'Something went wrong',
-        description: "Thresholding couldn't be applied on your image, please try again later.",
-        variant: 'destructive'
-      });
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:error', imageErrorListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
+    }
+  }, [data]);
 
   const onSubmit = (data: z.infer<typeof contoursSchema>) => {
     const body = {

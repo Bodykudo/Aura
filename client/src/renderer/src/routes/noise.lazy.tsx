@@ -8,9 +8,8 @@ import { AudioLines } from 'lucide-react';
 import Heading from '@renderer/components/Heading';
 import Dropzone from '@renderer/components/Dropzone';
 import OutputImage from '@renderer/components/OutputImage';
-import { Form, FormControl, FormField, FormItem } from '@renderer/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@renderer/components/ui/form';
 import { Input } from '@renderer/components/ui/input';
-import { Label } from '@renderer/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -23,7 +22,7 @@ import {
 import { Button } from '@renderer/components/ui/button';
 
 import useGlobalState from '@renderer/hooks/useGlobalState';
-import { useToast } from '@renderer/components/ui/use-toast';
+import useHandleProcessing from '@renderer/hooks/useHandleProcessing';
 
 import placeholder from '@renderer/assets/placeholder2.png';
 
@@ -66,14 +65,11 @@ const inputs = [
 function Noise() {
   const ipcRenderer = (window as any).ipcRenderer;
 
-  const {
-    filesIds,
-    setFileId,
-    setUploadedImageURL,
-    setProcessedImageURL,
-    isProcessing,
-    setIsProcessing
-  } = useGlobalState();
+  const { filesIds, setProcessedImageURL, isProcessing, setIsProcessing, reset } = useGlobalState();
+  const { data } = useHandleProcessing({
+    fallbackFn: () => setIsProcessing(false),
+    errorMessage: "Noise couldn't be applied to your image. Please try again."
+  });
 
   const form = useForm<z.infer<typeof noiseSchema>>({
     resolver: zodResolver(noiseSchema),
@@ -86,44 +82,15 @@ function Noise() {
     }
   });
 
-  const { toast } = useToast();
-
   useEffect(() => {
-    setIsProcessing(false);
-    setFileId(0, null);
-    setUploadedImageURL(0, null);
-    setProcessedImageURL(0, null);
+    reset();
   }, []);
 
   useEffect(() => {
-    const imageReceivedListener = (event: any) => {
-      if (event.data.image) {
-        setProcessedImageURL(0, event.data.image);
-      }
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:received', imageReceivedListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
-
-  useEffect(() => {
-    const imageErrorListener = () => {
-      toast({
-        title: 'Something went wrong',
-        description: "Your image couldn't be processed, please try again.",
-        variant: 'destructive'
-      });
-      setIsProcessing(false);
-    };
-    ipcRenderer.on('image:error', imageErrorListener);
-
-    return () => {
-      ipcRenderer.removeAllListeners();
-    };
-  }, []);
+    if (data && data.image) {
+      setProcessedImageURL(0, data.image);
+    }
+  }, [data]);
 
   const onSubmit = (data: z.infer<typeof noiseSchema>) => {
     const body = {
@@ -164,7 +131,7 @@ function Noise() {
                   name="type"
                   render={({ field }) => (
                     <FormItem className="w-[250px] mr-4">
-                      <Label htmlFor="noiseType">Noise Type</Label>
+                      <FormLabel htmlFor="noiseType">Noise Type</FormLabel>
                       <Select disabled={isProcessing} onValueChange={field.onChange}>
                         <FormControl id="noiseType">
                           <SelectTrigger>
@@ -198,7 +165,7 @@ function Noise() {
                             name={input.name}
                             render={({ field }) => (
                               <FormItem className="w-[150px]">
-                                <Label htmlFor={input.name}>{input.label}</Label>
+                                <FormLabel htmlFor={input.name}>{input.label}</FormLabel>
                                 <FormControl className="p-2">
                                   <Input
                                     type="number"
