@@ -4,17 +4,17 @@ import { Stage, Layer, Image as KonvaImage, Circle } from 'react-konva';
 import { Button } from './ui/button';
 import useGlobalState from '@renderer/hooks/useGlobalState';
 
-interface SeededInputProps {
+interface SeedInputProps {
   imageUrl: string;
-  dots: { x: number; y: number }[];
-  setDots: (dots: { x: number; y: number }[]) => void;
+  setSeedPoints: (dots: { x: number; y: number }[]) => void;
 }
 
-export default function SeededInput({ imageUrl, dots, setDots }: SeededInputProps) {
+export default function SeedInput({ imageUrl, setSeedPoints }: SeedInputProps) {
   const { setUploadedImageURL, setFileId, setProcessedImageURL } = useGlobalState();
 
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [image, setImage] = useState<HTMLImageElement | null>(null);
+  const [dots, setDots] = useState<{ x: number; y: number }[]>([]);
   const stageRef = useRef<any>(null);
   const layerRef = useRef<any>(null);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -40,17 +40,29 @@ export default function SeededInput({ imageUrl, dots, setDots }: SeededInputProp
     image.src = imageUrl;
   }, [imageUrl]);
 
-  const handleOnClick = (event: any) => {
-    if (event.evt.ctrlKey) {
-      const stage = stageRef.current!.getStage();
-      const scale = stage.scaleX();
-      const position = stage.getPointerPosition()!;
-      const x = (position.x - layerRef.current!.x()) / scale;
-      const y = (position.y - layerRef.current!.y()) / scale;
+  const handleStageMouseDown = () => {
+    const stage = stageRef.current!.getStage();
+    const scale = stage.scaleX();
+    const position = stage.getPointerPosition()!;
+    const x = (position.x - layerRef.current!.x()) / scale;
+    const y = (position.y - layerRef.current!.y()) / scale;
 
-      setDots([...dots, { x, y }]);
-    }
+    setDots([...dots, { x, y }]);
   };
+
+  useEffect(() => {
+    const newDotsArray = dots.map((dot) => {
+      let newX = (dot.x / imageSize.width) * image!.width;
+      let newY = (dot.y / imageSize.height) * image!.height;
+      newX = Math.max(0, Math.min(newX, image!.width));
+      newY = Math.max(0, Math.min(newY, image!.height));
+      return {
+        x: newX,
+        y: newY
+      };
+    });
+    setSeedPoints(newDotsArray);
+  }, [dots, imageSize, image]);
 
   return (
     <div className="flex flex-col gap-2 flex-1">
@@ -62,7 +74,7 @@ export default function SeededInput({ imageUrl, dots, setDots }: SeededInputProp
           width={parentRef.current ? parentRef.current.offsetWidth : 0}
           height={parentRef.current ? parentRef.current.offsetHeight : 0}
           ref={stageRef}
-          onClick={handleOnClick}
+          onMouseDown={handleStageMouseDown}
         >
           <Layer ref={layerRef}>
             {image && (

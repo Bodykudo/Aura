@@ -128,18 +128,15 @@ class Segmentation:
 
     @staticmethod
     def region_growing_segmentaion(
-        image_path: str,
-        thershold: int,
-        seed_points: list[tuple]
+        image_path: str, thershold: int, seed_points: list[tuple]
     ):
-        print(seed_points)     
+        print(seed_points)
         original_image = read_image(image_path)
         image_gray = read_image(image_path, grayscale=True)
         _, img = cv2.threshold(image_gray, thershold, 255, cv2.THRESH_BINARY)
         processed = np.full((img.shape[0], img.shape[1]), False)
 
         outimg = np.zeros_like(img)
-
 
         for index, pix in enumerate(seed_points):
             processed[pix[0], pix[1]] = True
@@ -190,4 +187,3 @@ class Segmentation:
 
         segmentedImage = cv2.cvtColor(segmentedImage, cv2.COLOR_Luv2RGB)
         return segmentedImage
-

@@ -26,7 +26,7 @@ import useGlobalState from '@renderer/hooks/useGlobalState';
 import { useToast } from '@renderer/components/ui/use-toast';
 
 import placeholder from '@renderer/assets/placeholder.png';
-import SeededInput from '@renderer/components/SeededInput';
+import SeedInput from '@renderer/components/SeedInput';
 
 const filtersSchema = z.object({
   type: z.enum(['kmeans', 'meanShift', 'agglomerative', 'regionGrowing']).nullable(),
@@ -69,9 +69,7 @@ const inputs = [
   },
   {
     value: 'regionGrowing',
-    inputs: [
-      { label: 'Threshold', name: 'threshold', min: 1, max: 250, step: 1 },
-    ]
+    inputs: [{ label: 'Threshold', name: 'threshold', min: 1, max: 250, step: 1 }]
   }
 ];
 
@@ -88,7 +86,7 @@ function Segmentation() {
     setIsProcessing
   } = useGlobalState();
 
-  const [seededPoints, setSeededPoints] = useState<{ x: number; y: number }[]>([]);
+  const [seedPoints, setSeedPoints] = useState<{ x: number; y: number }[]>([]);
 
   const form = useForm<z.infer<typeof filtersSchema>>({
     resolver: zodResolver(filtersSchema),
@@ -150,7 +148,7 @@ function Segmentation() {
       threshold: data.threshold,
       clustersNumber: data.clustersNumber,
       colorThreshold: data.colorThreshold,
-      seedPoints: seededPoints
+      seedPoints: seedPoints
     };
 
     console.log(body);
@@ -245,11 +243,7 @@ function Segmentation() {
         </div>
         <div className="flex flex-col md:flex-row gap-4 w-full">
           {uploadedImagesURLs[0] && form.watch('type') === 'regionGrowing' ? (
-            <SeededInput
-              imageUrl={uploadedImagesURLs[0]}
-              dots={seededPoints}
-              setDots={setSeededPoints}
-            />
+            <SeedInput imageUrl={uploadedImagesURLs[0]} setSeedPoints={setSeedPoints} />
           ) : (
             <Dropzone index={0} />
           )}
