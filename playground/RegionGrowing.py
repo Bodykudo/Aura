@@ -17,36 +17,29 @@ def get_8_connected(x, y, shape):
     
     return connected_pixels
 
-def region_growing(img, seed_points, test=lambda seed_x, seed_y, x, y, img, outimg: img[x, y] != 0, colormap=None):
+def region_growing(img, seed_points):
     processed = np.full((img.shape[0], img.shape[1]), False)
-    
-    if colormap is None:
-        outimg = np.zeros_like(img)
-    else:
-        outimg = np.zeros((img.shape[0], img.shape[1], colormap.shape[1]), dtype=np.uint8)
-    
+    outimg = np.zeros_like(img)
+
     for index, pix in enumerate(seed_points):
         processed[pix[0], pix[1]] = True
-        if colormap is None:
-            outimg[pix[0], pix[1]] = img[pix[0], pix[1]]
-        else:
-            outimg[pix[0], pix[1]] = colormap[index % len(colormap)]
-    
+        outimg[pix[0], pix[1]] = img[pix[0], pix[1]]
+
     while len(seed_points) > 0:
         pix = seed_points[0]
-            
+        
         for coord in get_8_connected(pix[0], pix[1], img.shape):
             if not processed[coord[0], coord[1]]:
-                test_result = test(pix[0], pix[1], coord[0], coord[1], img, outimg)
-                if test_result:
+                if img[coord[0], coord[1]] != 0:
                     outimg[coord[0], coord[1]] = outimg[pix[0], pix[1]]
                     if not processed[coord[0], coord[1]]:
                         seed_points.append(coord)
                     processed[coord[0], coord[1]] = True
-                    
+
         seed_points.pop(0)
-    
+
     return outimg, processed
+
 
 def on_mouse(event, x, y, flags, params):
     if event == cv2.EVENT_LBUTTONDOWN:

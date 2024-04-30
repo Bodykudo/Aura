@@ -130,36 +130,27 @@ class Segmentation:
     def region_growing_segmentaion(
         image_path: str,
         thershold: int,
-        seed_points: list[tuple],
-        test=lambda seed_x, seed_y, x, y, img, outimg: img[x, y] != 0,
-        colormap=None,
+        seed_points: list[tuple]
     ):
-        original_image = cv2.imread(image_path)
-        image_gray = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+        print(seed_points)     
+        original_image = read_image(image_path)
         image_gray = read_image(image_path, grayscale=True)
         _, img = cv2.threshold(image_gray, thershold, 255, cv2.THRESH_BINARY)
         processed = np.full((img.shape[0], img.shape[1]), False)
 
-        if colormap is None:
-            outimg = np.zeros_like(img)
-        else:
-            outimg = np.zeros(
-                (img.shape[0], img.shape[1], colormap.shape[1]), dtype=np.uint8
-            )
+        outimg = np.zeros_like(img)
+
 
         for index, pix in enumerate(seed_points):
             processed[pix[0], pix[1]] = True
-            if colormap is None:
-                outimg[pix[0], pix[1]] = img[pix[0], pix[1]]
-            else:
-                outimg[pix[0], pix[1]] = colormap[index % len(colormap)]
+            outimg[pix[0], pix[1]] = img[pix[0], pix[1]]
 
         while len(seed_points) > 0:
             pix = seed_points[0]
+
             for coord in Segmentation.get_8_connected(pix[0], pix[1], img.shape):
                 if not processed[coord[0], coord[1]]:
-                    test_result = test(pix[0], pix[1], coord[0], coord[1], img, outimg)
-                    if test_result:
+                    if img[coord[0], coord[1]] != 0:
                         outimg[coord[0], coord[1]] = outimg[pix[0], pix[1]]
                         if not processed[coord[0], coord[1]]:
                             seed_points.append(coord)
@@ -199,3 +190,4 @@ class Segmentation:
 
         segmentedImage = cv2.cvtColor(segmentedImage, cv2.COLOR_Luv2RGB)
         return segmentedImage
+
