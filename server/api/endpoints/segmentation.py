@@ -44,6 +44,10 @@ async def apply_segmentation(image_id: str, segmentation: SegmentationModel):
             seed_points=seed_points,
         )
 
+    elif segmentation.type=="agglemerative":
+        segmented_image=Segmentation.agglomerative_segmentation(image_path=image_path,number_of_clusters=segmentation.clustersNumber)
+
+
     segmented_image = convert_image(segmented_image)
 
     return {
