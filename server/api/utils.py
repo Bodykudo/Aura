@@ -120,7 +120,7 @@ def compute_distances(feature_space, current_mean_array):
 
 
 @jit(nopython=True)  # Apply Numba JIT optimization
-def find_spectral_thresholds(histogram, global_mean_intensity):
+def find_thresholds(histogram, global_mean_intensity):
     max_variance = 0
     optimal_high_threshold, optimal_low_threshold = 0, 0
     for high_threshold in range(1, 256):

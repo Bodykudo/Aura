@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from api.utils import read_image, find_spectral_thresholds
+from api.utils import read_image, find_thresholds
 
 
 class Thresholding:
@@ -19,7 +19,7 @@ class Thresholding:
     def find_spectral_thresholds(histogram: np.ndarray, global_mean_intensity: float):
         optimal_high_threshold, optimal_low_threshold = 0, 0
 
-        optimal_low_threshold, optimal_high_threshold = find_spectral_thresholds(
+        optimal_low_threshold, optimal_high_threshold = find_thresholds(
             histogram, global_mean_intensity
         )
         if optimal_low_threshold == 0 or optimal_high_threshold == 0:
