@@ -6,7 +6,7 @@ from api.utils import convert_image, get_image, read_image
 
 router = APIRouter()
 
-segmentation_methods = ["kmeans", "meanShift", "regionGrowing", "agglemerative"]
+segmentation_methods = ["kmeans", "meanShift", "regionGrowing", "agglomerative"]
 
 
 @router.post("/segmentation/{image_id}")
@@ -43,10 +43,10 @@ async def apply_segmentation(image_id: str, segmentation: SegmentationModel):
             thershold=segmentation.threshold,
             seed_points=seed_points,
         )
-
-    elif segmentation.type=="agglemerative":
-        segmented_image=Segmentation.agglomerative_segmentation(image_path=image_path,number_of_clusters=segmentation.clustersNumber)
-
+    elif segmentation.type == "agglomerative":
+        segmented_image = Segmentation.agglomerative_segmentation(
+            image_path=image_path, number_of_clusters=segmentation.clustersNumber
+        )
 
     segmented_image = convert_image(segmented_image)
 

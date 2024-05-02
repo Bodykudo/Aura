@@ -34,8 +34,7 @@ const filtersSchema = z.object({
   maxIterations: z.number(),
   windowSize: z.number(),
   threshold: z.number(),
-  clustersNumber: z.number(),
-  colorThreshold: z.number()
+  clustersNumber: z.number()
 });
 
 const filtersOptions = [
@@ -62,10 +61,7 @@ const inputs = [
   },
   {
     value: 'agglomerative',
-    inputs: [
-      { label: 'Clusters Number', name: 'clustersNumber', min: 1, max: 13, step: 2 },
-      { label: 'Color Threshold', name: 'colorThreshold', min: 1, max: 50, step: 1 }
-    ]
+    inputs: [{ label: 'Clusters Number', name: 'clustersNumber', min: 1, max: 500, step: 1 }]
   },
   {
     value: 'regionGrowing',
@@ -76,7 +72,14 @@ const inputs = [
 function Segmentation() {
   const ipcRenderer = (window as any).ipcRenderer;
 
-  const { filesIds, setProcessedImageURL, isProcessing, setIsProcessing, reset } = useGlobalState();
+  const {
+    filesIds,
+    uploadedImagesURLs,
+    setProcessedImageURL,
+    isProcessing,
+    setIsProcessing,
+    reset
+  } = useGlobalState();
   const { data } = useHandleProcessing({
     fallbackFn: () => setIsProcessing(false),
     errorMessage: "Your image couldn't be segmented. Please try again."
@@ -91,8 +94,7 @@ function Segmentation() {
       maxIterations: 100,
       windowSize: 30,
       threshold: 100,
-      clustersNumber: 7,
-      colorThreshold: 5
+      clustersNumber: 7
     }
   });
 
@@ -114,7 +116,6 @@ function Segmentation() {
       windowSize: data.windowSize,
       threshold: data.threshold,
       clustersNumber: data.clustersNumber,
-      colorThreshold: data.colorThreshold,
       seedPoints: seedPoints
     };
 

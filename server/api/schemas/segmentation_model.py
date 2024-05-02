@@ -14,5 +14,4 @@ class SegmentationModel(BaseModel):
     windowSize: int
     threshold: int
     clustersNumber: int
-    colorThreshold: int
     seedPoints: List[Point]
