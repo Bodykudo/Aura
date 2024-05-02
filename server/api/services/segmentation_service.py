@@ -167,7 +167,7 @@ class Segmentation:
     @staticmethod
     def agglomerative_segmentation(image_path: str, number_of_clusters: int):
         image = read_image(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2Luv)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         segmentedImage = np.zeros(image.shape, dtype=np.uint8)
 
         clusters = image.reshape(-1, 3)
@@ -185,5 +185,5 @@ class Segmentation:
                 color = clusters[labels[i, j]]
                 segmentedImage[i, j] = color
 
-        segmentedImage = cv2.cvtColor(segmentedImage, cv2.COLOR_Luv2RGB)
+        segmentedImage = cv2.cvtColor(segmentedImage, cv2.COLOR_BGR2RGB)
         return segmentedImage
