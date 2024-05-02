@@ -19,7 +19,8 @@ class Thresholding:
     def find_spectral_thresholds(histogram: np.ndarray, global_mean_intensity: float):
         optimal_high_threshold, optimal_low_threshold = 0, 0
         optimal_high_threshold = np.argmax(histogram)
-        optimal_low_threshold = np.argmin(histogram[global_mean_intensity::-1])
+        optimal_low_threshold = np.argmin(histogram[int(global_mean_intensity)::-1])
+
 
         # optimal_low_threshold, optimal_high_threshold = find_spectral_thresholds(
         #     histogram, global_mean_intensity
