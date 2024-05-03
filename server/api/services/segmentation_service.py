@@ -104,7 +104,7 @@ class Segmentation:
                 is_new_mean_random = False
                 current_mean_array[0, :3] = mean_color
                 current_mean_array[0, 3:] = mean_position
-        return cv2.cvtColor(segmented_image, cv2.COLOR_BGR2RGB)
+        return segmented_image
 
     @staticmethod
     def get_8_connected(x, y, shape):
@@ -167,7 +167,6 @@ class Segmentation:
     @staticmethod
     def agglomerative_segmentation(image_path: str, number_of_clusters: int):
         image = read_image(image_path)
-        # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         segmentedImage = np.zeros(image.shape, dtype=np.uint8)
 
         clusters = image.reshape(-1, 3)
@@ -184,6 +183,4 @@ class Segmentation:
             for j in prange(image.shape[1]):
                 color = clusters[labels[i, j]]
                 segmentedImage[i, j] = color
-
-        # segmentedImage = cv2.cvtColor(segmentedImage, cv2.COLOR_BGR2RGB)
         return segmentedImage
