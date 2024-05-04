@@ -17,6 +17,7 @@ const CornersLazyImport = createFileRoute('/corners')();
 const MatchingLazyImport = createFileRoute('/matching')();
 const SiftLazyImport = createFileRoute('/sift')();
 const SegmentationLazyImport = createFileRoute('/segmentation')();
+const FaceLazyImport = createFileRoute('/face')();
 
 // Create/Update Routes
 const IndexLazyRoute = IndexLazyImport.update({
@@ -84,6 +85,11 @@ const SegmentationLazyRoute = SegmentationLazyImport.update({
   getParentRoute: () => rootRoute
 } as any).lazy(() => import('./routes/segmentation.lazy').then((d) => d.Route));
 
+const FaceLazyRoute = FaceLazyImport.update({
+  path: '/face',
+  getParentRoute: () => rootRoute
+} as any).lazy(() => import('./routes/face.lazy').then((d) => d.Route));
+
 // Populate the FileRoutesByPath interface
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
@@ -139,6 +145,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SegmentationLazyImport;
       parentRoute: typeof rootRoute;
     };
+    '/face': {
+      preLoaderRoute: typeof FaceLazyImport;
+      parentRoute: typeof rootRoute;
+    };
   }
 }
 
@@ -156,5 +166,6 @@ export const routeTree = rootRoute.addChildren([
   CornersLazyRoute,
   MatchingLazyRoute,
   SiftLazyRoute,
-  SegmentationLazyRoute
+  SegmentationLazyRoute,
+  FaceLazyRoute
 ]);

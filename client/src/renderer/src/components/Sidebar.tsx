@@ -1,6 +1,8 @@
+import { Link } from '@tanstack/react-router';
+
 import { routes } from '@renderer/lib/constants';
 import { cn } from '@renderer/lib/utils';
-import { Link } from '@tanstack/react-router';
+
 import logo from '@renderer/assets/logo.png';
 
 export default function Sidebar() {

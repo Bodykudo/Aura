@@ -9,6 +9,7 @@ import {
   Columns2,
   FilterX,
   PieChart,
+  ScanFace,
   ScanIcon,
   Wand2
 } from 'lucide-react';
@@ -97,5 +98,12 @@ export const routes = [
     href: '/segmentation',
     color: 'text-red-800',
     bgColor: 'bg-red-800/10'
+  },
+  {
+    label: 'Face Detection & Recongition',
+    icon: ScanFace,
+    href: '/face',
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-400/10'
   }
 ];
