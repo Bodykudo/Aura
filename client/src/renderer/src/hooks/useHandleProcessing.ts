@@ -9,7 +9,7 @@ export default function useHandleProcessing({
   fallbackFn: () => void;
   errorMessage: string;
 }) {
-  const ipcRenderer = (window as any).ipcRenderer;
+  const ipcRenderer = window.ipcRenderer;
   const [data, setData] = useState<any>(null);
 
   const { toast } = useToast();

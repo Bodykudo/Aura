@@ -24,7 +24,7 @@ export default function Dropzone({ index }: DropzoneProps) {
   const { uploadedImagesURLs, setUploadedImageURL, setFileId, setProcessedImageURL, isProcessing } =
     useGlobalState();
 
-  const ipcRenderer = (window as any).ipcRenderer;
+  const ipcRenderer = window.ipcRenderer;
 
   const startSimulateProgress = () => {
     setProgressValue(0);

@@ -71,7 +71,7 @@ const inputs = [
 ];
 
 function Hough() {
-  const ipcRenderer = (window as any).ipcRenderer;
+  const ipcRenderer = window.ipcRenderer;
 
   const { filesIds, setProcessedImageURL, isProcessing, setIsProcessing, reset } = useGlobalState();
   const { data } = useHandleProcessing({

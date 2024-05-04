@@ -41,7 +41,7 @@ const inputs = [
 ];
 
 function Contours() {
-  const ipcRenderer = (window as any).ipcRenderer;
+  const ipcRenderer = window.ipcRenderer;
 
   const {
     filesIds,

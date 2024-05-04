@@ -70,7 +70,7 @@ const inputs = [
 ];
 
 function Segmentation() {
-  const ipcRenderer = (window as any).ipcRenderer;
+  const ipcRenderer = window.ipcRenderer;
 
   const {
     filesIds,
