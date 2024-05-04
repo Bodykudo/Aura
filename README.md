@@ -28,11 +28,20 @@ Aura comes with a wide range of features:
 
 - **Image Processing**: Aura can apply grayscale, normalization, and equalization to images, and it provides a histogram for visualizing the image's color distribution.
 
-- **Thresholding**: Aura supports both global and local thresholding, allowing users to adjust the intensity levels in an image to separate objects from the background.
+- **Thresholding**: Aura supports both global and local thresholding, allowing users to adjust the intensity levels in an image to separate objects from the background. It includes Otsu, Optimal, and Spectral thresholding methods.
 
 - **Hough Transform**: Aura can perform Hough Transform for line, circles, and ellipses detection.
 
 - **Active Contouring**: Aura supports active contouring for calculating perimeter and area of detected shapes.
+
+- **Corner Detection**: Aura can detect corners in an image using Harris and Lambda operators.
+
+- **SIFT Descriptors**: Aura uses Scale-Invariant Feature Transform (SIFT) descriptors to detect keypoints and apply image matching using Sum of Squared Differences (SSD) and Normalized Cross Correlation (NCC).
+
+- **Image Segmentation**: Aura supports various image segmentation techniques, including K-Means Clustering, Mean Shift Segmentation, Agglomerative Segmentation, and Region Growing Segmentation.
+
+- **Face Detection and Recognition**: Aura can detect faces in an image and recognize them using Principal Component Analysis (PCA) and Support Vector Machine (SVM) classifier.
+
 
 These features make Aura a versatile tool for a wide range of image processing tasks.
 
@@ -93,6 +102,14 @@ This project leverages a variety of modern technologies to deliver a robust and 
   - FastAPI
   - OpenCV
   - NumPy
+- **Landing Page**
+  - React.js
+  - Next.js
+  - TypeScript
+  - Tailwind CSS
+  - Framer Motion
+  - Three.js
+  - React Three Fiber
 
 
 ## Contributors
