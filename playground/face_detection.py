@@ -32,8 +32,8 @@ class FaceDetection:
         return image_with_faces
 
 
-face_cascade_path = "haarcascade_frontalface_default.xml"
-image_path = "people.jpeg"
+face_cascade_path = "./playground/haarcascade_frontalface_default.xml"
+image_path = "./playground/people.jpeg"
 image = read_image(image_path)
 face_detection = FaceDetection(face_cascade_path)
 image_with_faces = face_detection.detect_and_draw_faces(image)
