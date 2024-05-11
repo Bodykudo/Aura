@@ -4,7 +4,7 @@ import cv2
 from sklearn import preprocessing
 import pandas as pd
 from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split,GridSearchCV
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.decomposition import PCA
 from sklearn.pipeline import make_pipeline
@@ -131,23 +131,25 @@ class FaceRecognition:
                 img = cv2.resize(img, (64, 64))
                 img= img.flatten()
                 if img is not None:
-                        features.append(img)
+                        img_normalized = (img - np.mean(img)) / np.std(img)
+                        features.append(img_normalized)
                         labels.append(person_id)
 
         X = np.array(features)
         y=np.array(labels)
-
-
-        # Reshape the second array to match the shape of the first array
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
         pca = PCA(n_components=k, whiten=True, random_state=42)
         X_train_pca = pca.fit_transform(X_train)
         X_test_pca = pca.transform(X_test)
+        param_grid = {'C': [0.1, 1, 10, 100],
+                      'gamma': [1e-3, 1e-4],
+                      'kernel': ['linear', 'rbf']}
+        grid_search = GridSearchCV(SVC(probability=True), param_grid, cv=5)
+        grid_search.fit(X_train_pca, y_train)
 
-        # Train SVM
-        svm_model = SVC(kernel='linear', C=1.0, random_state=0,probability=True)
-        svm_model.fit(X_train_pca, y_train)
+        # Get the best model
+        svm_model = grid_search.best_estimator_
 
         # Test SVM
         y_pred = svm_model.predict(X_test_pca)
@@ -155,27 +157,29 @@ class FaceRecognition:
         # Evaluate model
         accuracy = accuracy_score(y_test, y_pred)
         print("Accuracy:", accuracy)
-
-
         return svm_model,pca
 
-    def predict_face(self,image_path, pca, svm_model):
+    def predict_face(self, image_path, pca, svm_model):
         img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        img = cv2.resize(img, (64, 64))
+        img = cv2.resize(img, (64, 64))  # Keep the size consistent with training
         img = img.flatten()
-        img_pca = pca.transform([img])
+
+        # Normalize the image
+        img_normalized = (img - np.mean(img)) / np.std(img)
+
+        img_pca = pca.transform([img_normalized])
         prediction = svm_model.predict(img_pca)
         probability = svm_model.predict_proba(img_pca)
-        mapping = ['chris evans', 'chris hemsworth', 'mark ruffalo', "roert downy jr"]
-        # Thresholding
-        max_prob= max(max(probability))
-        if max_prob>0.5:
-            decision=prediction[0]
-            decision=mapping[decision-1]
-        else:
-            decision="Not Recognized"
-        return decision
+        mapping = ['chris evans', 'chris hemsworth', 'mark ruffalo', 'robert downey jr']
 
+        # Thresholding
+        max_prob = max(max(probability))
+        if max_prob > 0.5:
+            decision = prediction[0]
+            decision = mapping[decision - 1]
+        else:
+            decision = "Not Recognized"
+        return decision
 
     def predict_image_label(self, method,image_path, eigenfaces, weights, normalized_test_image, train_imgs_paths, trainLabels):
         if method == "euclidean":
@@ -192,7 +196,7 @@ class FaceRecognition:
 
 # Example usage
 face_recognition = FaceRecognition()
-path__Rec_img = r"C:\Users\hp\Desktop\CV-Tool-Kit\Aura\playground\Avengers\test\chris_hemsworth\chris_hemsworth14.png"
+path__Rec_img = r"C:\Users\hp\Downloads\mark-ruffalo_g7rr.jpg"
 unknown_face = cv2.imread(path__Rec_img,cv2.IMREAD_GRAYSCALE)
 # unknown_face = cv2.cvtColor(unknown_face, cv2.COLOR_BGR2GRAY)
 gray = cv2.resize(unknown_face, (64, 64))
