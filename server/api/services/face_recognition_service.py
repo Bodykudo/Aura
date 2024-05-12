@@ -240,21 +240,23 @@ class FaceRecognition:
         return transformed_features.flatten()
 
 
+
 face_recognition = FaceRecognition()
 svm_model, pca = face_recognition.load_model("svm_model.pkl", "pca.pkl")
 
-
 path_Rec_img = "./playground/Avengers/a.png"
-face_cascade_path = "./playground/haarcascade_frontalface_default.xml"
-face_detection = FaceDetection(face_cascade_path)
+face_detection = FaceDetection()
 
 # Read the image and detect faces
 unknown_face = cv2.imread(path_Rec_img, cv2.IMREAD_GRAYSCALE)
 image_with_faces = face_detection.detect_and_draw_faces(unknown_face)
 
-# Convert the image to grayscale
 
-# Resize each detected face to a fixed size (64x64) and apply PCA on each face
+# this line to display the image after detecting the faces
+image_before = face_detection.detect_and_draw_faces(unknown_face)
+
+
+# to  loop over each detected face and predict its label and plot the square on it.
 for i, (x, y, w, h) in enumerate(
     face_detection.detect_faces(image_with_faces), start=0
 ):
@@ -282,7 +284,6 @@ for i, (x, y, w, h) in enumerate(
         2,
     )
 
-image_before = face_detection.detect_and_draw_faces(unknown_face)
 
 # Display the image with labels
 cv2.imshow("before", image_before)
