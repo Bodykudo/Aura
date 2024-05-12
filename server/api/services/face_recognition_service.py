@@ -4,7 +4,7 @@ import cv2
 from sklearn import preprocessing
 import pandas as pd
 from sklearn.svm import SVC
-
+import pickle
 
 class FaceRecognition:
     def __init__(
@@ -77,7 +77,7 @@ class FaceRecognition:
             eigenfaces = np.array(pca_df['Eigenfaces'])
             weights = np.array(pca_df['Weights'])
             labels = np.array(pca_df['Labels'])
-            
+            image_paths = np.array(pca_df['ImagePaths'])
         else:
             train_data_paths, train_data_labels = self.get_image_paths(
                 path=self.training_path
@@ -131,7 +131,7 @@ class FaceRecognition:
         else:
             raise ValueError("Invalid evaluation method. Choose 'euclidean' or 'svm'.")
 
-    def save_pca_data_to_csv(self, eigenvalues, eigenfaces, weights, labels):
+    def save_pca_data_to_csv(self, eigenvalues, eigenfaces, weights, labels, image_paths):
         eigenvalues = np.array(eigenvalues)
         eigenfaces = np.array(eigenfaces)
         weights = np.array(weights)
@@ -140,9 +140,55 @@ class FaceRecognition:
             "Eigenfaces": eigenfaces.tolist(),
             "Weights": weights.tolist(),
             "Labels": labels,
+            'ImagePaths': image_paths}
         }
         pca_df = pd.DataFrame(data)
         pca_df.to_csv(self.training_csv, index=False)
+
+    def load_model(self, svm_model_path, pca_path):
+        # Load SVM model
+        with open(svm_model_path, 'rb') as f:
+            svm_model = pickle.load(f)
+
+        # Load PCA object
+        with open(pca_path, 'rb') as f:
+            pca = pickle.load(f)
+
+        return svm_model, pca
+
+    def predict_face(self, image_path, pca, svm_model):
+        img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        img = cv2.resize(img, (64, 64))  # Keep the size consistent with training
+        img = img.flatten()
+
+        # Normalize the image
+        img_normalized = (img - np.mean(img)) / np.std(img)
+
+        img_pca = pca.transform([img_normalized])
+        prediction = svm_model.predict(img_pca)
+        probability = svm_model.predict_proba(img_pca)
+        mapping = ['chris evans', 'chris hemsworth', 'mark ruffalo', 'robert downey jr']
+
+        # Thresholding
+        max_prob = max(max(probability))
+        if max_prob > 0.5:
+            decision = prediction[0]
+            decision = mapping[decision - 1]
+        else:
+            decision = "Not Recognized"
+        return decision
+
+    def predict_image_label(self, method,image_path, eigenfaces, weights, normalized_test_image, train_imgs_paths, trainLabels):
+        if method == "euclidean":
+            return self.evaluate_match_euclidean(
+                eigenfaces, weights, normalized_test_image, train_imgs_paths, trainLabels
+            )
+        elif method == "svm":
+           svm_model,pca=self.load_model('svm_model.pkl','pca.pkl')
+           final_decision=self.predict_face(image_path,pca,svm_model)
+           return None,final_decision,None
+        else:
+            raise ValueError("Invalid evaluation method. Choose 'euclidean' or 'svm'.")
 
 
 
