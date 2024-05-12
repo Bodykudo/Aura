@@ -9,6 +9,7 @@ from sklearn.metrics import classification_report, accuracy_score
 from sklearn.decomposition import PCA
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
+import pickle
 
 
 #TODO :
@@ -112,52 +113,72 @@ class FaceRecognition:
         best_match = np.argmin(euclidean_distance)
         return train_imgs_paths, trainLabels, best_match
 
-    def load_and_apply_PCA(self,image_path, pca):
-        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        image = cv2.resize(image, (64, 64))
-        feature_vector = image.flatten()
-        transformed_features = pca.transform([feature_vector])
+    # def load_and_apply_PCA(self,image_path, pca):
+    #     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    #     image = cv2.resize(image, (64, 64))
+    #     feature_vector = image.flatten()
+    #     transformed_features = pca.transform([feature_vector])
+    #
+    #     return transformed_features.flatten()
+    # def evaluate_match_svm(self,k):
+    #     features = []
+    #     labels = []
+    #
+    #     for person_id in range(1, 5):
+    #         person_dir = rf"C:\Users\hp\Desktop\CV-Tool-Kit\Aura\playground\Avengers\train\{person_id}"
+    #         for filename in os.listdir(person_dir):
+    #             image_path = os.path.join(person_dir, filename)
+    #             img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    #             img = cv2.resize(img, (64, 64))
+    #             img= img.flatten()
+    #             if img is not None:
+    #                     img_normalized = (img - np.mean(img)) / np.std(img)
+    #                     features.append(img_normalized)
+    #                     labels.append(person_id)
+    #
+    #     X = np.array(features)
+    #     y=np.array(labels)
+    #     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    #
+    #     pca = PCA(n_components=k, whiten=True, random_state=42)
+    #     X_train_pca = pca.fit_transform(X_train)
+    #     X_test_pca = pca.transform(X_test)
+    #     param_grid = {'C': [0.1, 1, 10, 100],
+    #                   'gamma': [1e-3, 1e-4],
+    #                   'kernel': ['linear', 'rbf']}
+    #     grid_search = GridSearchCV(SVC(probability=True), param_grid, cv=5)
+    #     grid_search.fit(X_train_pca, y_train)
+    #
+    #     # Get the best model
+    #     svm_model = grid_search.best_estimator_
+    #
+    #     # Test SVM
+    #     y_pred = svm_model.predict(X_test_pca)
+    #
+    #     # Evaluate model
+    #     accuracy = accuracy_score(y_test, y_pred)
+    #     print("Accuracy:", accuracy)
+    #     return svm_model,pca
+    #
+    # def save_model(self, svm_model, pca, svm_model_path, pca_path):
+    #     # Save SVM model
+    #     with open(svm_model_path, 'wb') as f:
+    #         pickle.dump(svm_model, f)
+    #
+    #     # Save PCA object
+    #     with open(pca_path, 'wb') as f:
+    #         pickle.dump(pca, f)
 
-        return transformed_features.flatten()
-    def evaluate_match_svm(self,k):
-        features = []
-        labels = []
+    def load_model(self, svm_model_path, pca_path):
+        # Load SVM model
+        with open(svm_model_path, 'rb') as f:
+            svm_model = pickle.load(f)
 
-        for person_id in range(1, 5):
-            person_dir = rf"C:\Users\hp\Desktop\CV-Tool-Kit\Aura\playground\Avengers\train\{person_id}"
-            for filename in os.listdir(person_dir):
-                image_path = os.path.join(person_dir, filename)
-                img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-                img = cv2.resize(img, (64, 64))
-                img= img.flatten()
-                if img is not None:
-                        img_normalized = (img - np.mean(img)) / np.std(img)
-                        features.append(img_normalized)
-                        labels.append(person_id)
+        # Load PCA object
+        with open(pca_path, 'rb') as f:
+            pca = pickle.load(f)
 
-        X = np.array(features)
-        y=np.array(labels)
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-        pca = PCA(n_components=k, whiten=True, random_state=42)
-        X_train_pca = pca.fit_transform(X_train)
-        X_test_pca = pca.transform(X_test)
-        param_grid = {'C': [0.1, 1, 10, 100],
-                      'gamma': [1e-3, 1e-4],
-                      'kernel': ['linear', 'rbf']}
-        grid_search = GridSearchCV(SVC(probability=True), param_grid, cv=5)
-        grid_search.fit(X_train_pca, y_train)
-
-        # Get the best model
-        svm_model = grid_search.best_estimator_
-
-        # Test SVM
-        y_pred = svm_model.predict(X_test_pca)
-
-        # Evaluate model
-        accuracy = accuracy_score(y_test, y_pred)
-        print("Accuracy:", accuracy)
-        return svm_model,pca
+        return svm_model, pca
 
     def predict_face(self, image_path, pca, svm_model):
         img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
@@ -187,7 +208,7 @@ class FaceRecognition:
                 eigenfaces, weights, normalized_test_image, train_imgs_paths, trainLabels
             )
         elif method == "svm":
-           svm_model,pca=self.evaluate_match_svm(150)
+           svm_model,pca=self.load_model('svm_model.pkl','pca.pkl')
            final_decision=self.predict_face(image_path,pca,svm_model)
            return None,final_decision,None
         else:
