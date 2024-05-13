@@ -9,7 +9,6 @@ import Heading from '@renderer/components/Heading';
 import Dropzone from '@renderer/components/Dropzone';
 import OutputImage from '@renderer/components/OutputImage';
 import { Form, FormControl, FormField, FormItem } from '@renderer/components/ui/form';
-// import { Input } from '@renderer/components/ui/input';
 import { Label } from '@renderer/components/ui/label';
 import {
   Select,
@@ -28,8 +27,7 @@ import useHandleProcessing from '@renderer/hooks/useHandleProcessing';
 import placeholder from '@renderer/assets/placeholder.png';
 
 const faceAnalysisSchema = z.object({
-  type: z.enum(['faceDetection', 'faceRecognition']).nullable(),
-  model: z.enum(['svm', 'euclideanDistance']).nullable()
+  type: z.enum(['faceDetection', 'faceRecognition']).nullable()
 });
 
 const analysisOptions = [
@@ -62,8 +60,7 @@ function Face() {
 
   const onSubmit = (data: z.infer<typeof faceAnalysisSchema>) => {
     const body = {
-      type: data.type,
-      model: data.model
+      type: data.type
     };
 
     setIsProcessing(true);
@@ -116,36 +113,6 @@ function Face() {
                     </FormItem>
                   )}
                 />
-
-                <div className="flex flex-wrap gap-2">
-                  {form.watch('type') && (
-                    <FormField
-                      control={form.control}
-                      name="model"
-                      render={({ field }) => (
-                        <FormItem className="w-[250px]">
-                          <Label htmlFor="model">Face Detection Model</Label>
-                          <Select disabled={isProcessing} onValueChange={field.onChange}>
-                            <FormControl id="model">
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select detection model" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectGroup>
-                                <SelectLabel>Model</SelectLabel>
-                                <SelectItem value="svm">SVM Model</SelectItem>
-                                <SelectItem value="euclideanDistance">
-                                  Euclidean Distance Formula
-                                </SelectItem>
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                </div>
               </div>
               <Button disabled={!filesIds[0] || isProcessing} type="submit">
                 Apply Face Analysis

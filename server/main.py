@@ -16,6 +16,7 @@ from api.endpoints import (
     matching,
     sift,
     segmentation,
+    face,
 )
 from api.config import uploads_folder
 
@@ -30,19 +31,19 @@ app = FastAPI(
 async def startup_event():
     if not os.path.exists(uploads_folder):
         os.makedirs(uploads_folder)
-    else:
-        for file in os.listdir(uploads_folder):
-            os.remove(os.path.join(uploads_folder, file))
+    # else:
+    #     for file in os.listdir(uploads_folder):
+    #         os.remove(os.path.join(uploads_folder, file))
 
 
-@repeat_every(seconds=60 * 60)
-async def clear_uploads():
-    for file in os.listdir(uploads_folder):
-        os.remove(os.path.join(uploads_folder, file))
+# @repeat_every(seconds=60 * 60)
+# async def clear_uploads():
+#     for file in os.listdir(uploads_folder):
+#         os.remove(os.path.join(uploads_folder, file))
 
 
 app.add_event_handler("startup", startup_event)
-app.add_event_handler("startup", clear_uploads)
+# app.add_event_handler("startup", clear_uploads)
 
 app.include_router(upload.router, prefix="/api")
 app.include_router(filter.router, prefix="/api")
@@ -57,3 +58,4 @@ app.include_router(corners.router, prefix="/api")
 app.include_router(matching.router, prefix="/api")
 app.include_router(sift.router, prefix="/api")
 app.include_router(segmentation.router, prefix="/api")
+app.include_router(face.router, prefix="/api")

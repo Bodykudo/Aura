@@ -5,12 +5,6 @@ from sklearn import preprocessing
 import pandas as pd
 from sklearn.svm import SVC
 import pickle
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import classification_report, accuracy_score
-from sklearn.decomposition import PCA
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
-from face_detection_service import FaceDetection
 
 
 class MyPCA:
@@ -59,8 +53,7 @@ class FaceRecognition:
         self.test_csv = test_csv
         self.mean_face = None
 
-
-### --------------------------------- EUCLIDEAN DISTANCE ---------------------------------------------########
+    ### --------------------------------- EUCLIDEAN DISTANCE ---------------------------------------------########
     def get_image_paths(self, path):
         image_paths = []
         labels = []
@@ -194,10 +187,9 @@ class FaceRecognition:
         pca_df = pd.DataFrame(data)
         pca_df.to_csv(self.training_csv, index=False)
 
-### --------------------------------- EUCLIDEAN DISTANCE ---------------------------------------------########
+    ### --------------------------------- EUCLIDEAN DISTANCE ---------------------------------------------########
 
-
-### --------------------------------- SVM MODEL ---------------------------------------------########
+    ### --------------------------------- SVM MODEL ---------------------------------------------########
     def load_model(self, svm_model_path, pca_path):
         # Load SVM model
         with open(svm_model_path, "rb") as f:
@@ -238,102 +230,3 @@ class FaceRecognition:
         transformed_features = pca.transform([feature_vector])
 
         return transformed_features.flatten()
-
-
-
-face_recognition = FaceRecognition()
-svm_model, pca = face_recognition.load_model("svm_model.pkl", "pca.pkl")
-
-path_Rec_img = "./playground/Avengers/a.png"
-face_detection = FaceDetection()
-
-# Read the image and detect faces
-unknown_face = cv2.imread(path_Rec_img, cv2.IMREAD_GRAYSCALE)
-image_with_faces = face_detection.detect_and_draw_faces(unknown_face)
-
-
-# this line to display the image after detecting the faces
-image_before = face_detection.detect_and_draw_faces(unknown_face)
-
-
-# to  loop over each detected face and predict its label and plot the square on it.
-for i, (x, y, w, h) in enumerate(
-    face_detection.detect_faces(image_with_faces), start=0
-):
-    # Extract the face region
-    face_region = unknown_face[y : y + h, x : x + w]
-
-    # Apply PCA on the flattened face image
-    ds = face_recognition.predict_face(face_region, pca, svm_model)
-
-    # Output the best match for each face
-    print(ds)
-
-    # Draw rectangle around the face
-    cv2.rectangle(image_with_faces, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-    # Display label for each face
-    label = ds
-    cv2.putText(
-        image_with_faces,
-        label,
-        (x, y - 10),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.9,
-        (0, 255, 0),
-        2,
-    )
-
-
-# Display the image with labels
-cv2.imshow("before", image_before)
-cv2.imshow("Detected Faces", image_with_faces)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-
-# # Example usage
-# # test_faces_folder = "./playground/Avengers/test"
-# # test_images_paths = [
-# #     os.path.join(test_faces_folder, subdir, filename)
-# #     for subdir in os.listdir(test_faces_folder)
-# #     for filename in os.listdir(os.path.join(test_faces_folder, subdir))
-# # ]
-
-# faces = []
-# test_labels = "chirs"
-# # for test_image_path in test_images_paths:
-# #     unknown_face = cv2.imread(test_image_path, cv2.IMREAD_GRAYSCALE)
-# #     unknown_face = cv2.resize(unknown_face, (64, 64))
-# #     unknown_face = np.array(unknown_face, dtype="float64")
-# #     faces.append(unknown_face)
-# #     test_labels.append(
-# #         os.path.basename(os.path.dirname(test_image_path))
-# #     )  # Extract test label from the directory name/
-# image = f"./playground/Avengers/test/markk.jpeg"
-# unknown_face = cv2.imread(
-#     image,
-#     cv2.IMREAD_GRAYSCALE,
-# )
-# unknown_face = cv2.resize(unknown_face, (64, 64))
-# unknown_face = np.array(unknown_face, dtype="float64").flatten()
-# paths, labels, best_matches = face_recognition.apply_face_recognition(
-#     unknown_face, test_labels
-# )
-# matched_labels = [
-#     paths[index] for index in best_matches
-# ]  # Get the label of the matched image
-# print(
-#     "Matched Label:",
-#     matched_labels,
-# )
-# # for i in range(len(test_labels)):
-# #     print(
-# #         i,
-# #         "-",
-# #         " Test Label:",
-# #         test_images_paths[i],
-# #         "=",
-# #         "Matched Label:",
-# #         matched_labels[i],
-# #     )
