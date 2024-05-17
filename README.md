@@ -98,10 +98,13 @@ This project leverages a variety of modern technologies to deliver a robust and 
   - Shadcn/UI
   - React Hook Form
   - Zustand
+  
 - **Backend**
   - FastAPI
   - OpenCV
   - NumPy
+  - scikit-learn
+
 - **Landing Page**
   - React.js
   - Next.js
