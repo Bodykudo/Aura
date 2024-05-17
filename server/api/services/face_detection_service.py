@@ -1,13 +1,6 @@
 import cv2
 
-
-def read_image(image_path: str, grayscale=False):
-    if grayscale:
-        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    else:
-        original_image = cv2.imread(image_path)
-        image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
-    return image
+from api.utils import read_image
 
 
 class FaceDetection:
@@ -24,7 +17,8 @@ class FaceDetection:
             cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
         return image
 
-    def detect_and_draw_faces(self, image):
+    def detect_and_draw_faces(self, image_path: str):
+        image = read_image(image_path)
         faces = self.detect_faces(image)
         image_with_faces = self.draw_faces(image.copy(), faces)
         return image_with_faces

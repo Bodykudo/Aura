@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
 from api.utils import convert_image, get_image, read_image
-from api.config import uploads_folder
 from api.schemas.edge_model import EdgeModel
 from api.services.edge_service import EdgeDetector
 
